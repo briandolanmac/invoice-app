@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { signOut } from "@/app/login/actions";
+import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
 
 type InvoiceRow = {
@@ -15,21 +16,24 @@ type InvoiceRow = {
 };
 
 export default async function HomePage() {
+  const usingDevSession = await hasDevSession();
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user && !usingDevSession) {
     redirect("/login");
   }
 
-  const { data: invoices } = await supabase
-    .from("invoices")
-    .select("id, invoice_number, invoice_date, status, total_amount, agencies(name)")
-    .order("invoice_date", { ascending: false })
-    .limit(8)
-    .returns<InvoiceRow[]>();
+  const { data: invoices } = usingDevSession
+    ? { data: [] as InvoiceRow[] }
+    : await supabase
+        .from("invoices")
+        .select("id, invoice_number, invoice_date, status, total_amount, agencies(name)")
+        .order("invoice_date", { ascending: false })
+        .limit(8)
+        .returns<InvoiceRow[]>();
 
   return (
     <main className="page">
@@ -46,6 +50,11 @@ export default async function HomePage() {
           <div>
             <p className="muted" style={{ margin: 0 }}>Rie Dolan</p>
             <h1 style={{ fontSize: 38, margin: "6px 0 0" }}>Tour Invoices</h1>
+            {usingDevSession ? (
+              <p className="muted" style={{ margin: "8px 0 0" }}>
+                Local dev mode is on. Supabase login is bypassed on this Mac only.
+              </p>
+            ) : null}
           </div>
           <form action={signOut}>
             <button className="button secondary" type="submit">Sign out</button>

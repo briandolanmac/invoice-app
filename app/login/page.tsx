@@ -1,4 +1,5 @@
-import { signIn } from "./actions";
+import { isLocalDevAuthEnabled } from "@/lib/dev-auth";
+import { signIn, signInForLocalDev } from "./actions";
 
 export default async function LoginPage({
   searchParams,
@@ -6,6 +7,7 @@ export default async function LoginPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const params = await searchParams;
+  const showLocalDevButton = isLocalDevAuthEnabled();
 
   return (
     <main className="page" style={{ display: "grid", placeItems: "center" }}>
@@ -18,7 +20,7 @@ export default async function LoginPage({
 
         {params.error ? (
           <p style={{ color: "var(--danger)", fontWeight: 700 }}>
-            That email/password did not work.
+            Sign-in failed: {params.error}
           </p>
         ) : null}
 
@@ -45,6 +47,30 @@ export default async function LoginPage({
           </label>
           <button className="button" type="submit">Sign in</button>
         </form>
+
+        {showLocalDevButton ? (
+          <>
+            <div
+              className="muted"
+              style={{
+                alignItems: "center",
+                display: "flex",
+                gap: 12,
+                margin: "22px 0",
+              }}
+            >
+              <span style={{ borderTop: "1px solid var(--border)", flex: 1 }} />
+              <span>Local prototype</span>
+              <span style={{ borderTop: "1px solid var(--border)", flex: 1 }} />
+            </div>
+
+            <form action={signInForLocalDev}>
+              <button className="button secondary" style={{ width: "100%" }} type="submit">
+                Continue in dev mode
+              </button>
+            </form>
+          </>
+        ) : null}
       </section>
     </main>
   );
