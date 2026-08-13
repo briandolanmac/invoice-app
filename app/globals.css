@@ -1,12 +1,13 @@
 :root {
   color-scheme: light;
-  --background: #f6f3ee;
+  --background: #fdf1f7;
   --card: #ffffff;
-  --ink: #1f2933;
-  --muted: #667085;
-  --border: #e7dfd2;
-  --accent: #0f766e;
-  --accent-dark: #115e59;
+  --ink: #3a1f2e;
+  --muted: #9d5c7c;
+  --border: #f6d3e6;
+  --accent: #d6336c;
+  --accent-dark: #a61e4d;
+  --accent-soft: #fbe4ef;
   --danger: #b42318;
 }
 
@@ -69,12 +70,18 @@ textarea {
 }
 
 .button.secondary {
-  background: #eef7f5;
+  background: var(--accent-soft);
   color: var(--accent-dark);
 }
 
 .button.secondary:hover {
-  background: #dff0ed;
+  background: #f6c9e0;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--accent-dark);
 }
 
 .muted {

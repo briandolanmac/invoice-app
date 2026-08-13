@@ -80,9 +80,9 @@ export default async function InvoicesPage() {
                   }}
                 >
                   <div style={{ display: "grid", gap: 4 }}>
-                    <strong>{invoice.invoice_number}</strong>
+                    <strong style={{ fontSize: 18 }}>{invoice.agencies?.name || "No agency"}</strong>
                     <span className="muted">
-                      {invoice.agencies?.name || "No agency"} · {invoice.invoice_date}
+                      {invoice.invoice_number} · {invoice.invoice_date}
                     </span>
                   </div>
                   <div style={{ alignItems: "center", display: "flex", gap: 14 }}>

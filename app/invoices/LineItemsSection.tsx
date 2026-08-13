@@ -1,16 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 
 export type LineItemRowData = {
   description: string;
   line_date: string;
   qty: string;
-  unit: string;
   price: string;
 };
 
-const EMPTY_ROW: LineItemRowData = { description: "", line_date: "", qty: "1", unit: "", price: "" };
+const EMPTY_ROW: LineItemRowData = { description: "", line_date: "", qty: "1", price: "" };
 
 function money(n: number) {
   return `$${n.toFixed(2)}`;
@@ -29,16 +28,32 @@ function makeRows(initial: LineItemRowData[] | undefined, minRows: number) {
   return base;
 }
 
+function TrashIcon() {
+  return (
+    <svg fill="none" height="18" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M4 7h16M9 7V4h6v3m-8 0 1 13h10l1-13"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+    </svg>
+  );
+}
+
 function RowGroup({
   title,
   prefix,
   rows,
   setRows,
+  descriptionListId,
 }: {
   title: string;
   prefix: "svc" | "exp";
   rows: LineItemRowData[];
   setRows: React.Dispatch<React.SetStateAction<LineItemRowData[]>>;
+  descriptionListId?: string;
 }) {
   function updateRow(index: number, patch: Partial<LineItemRowData>) {
     setRows((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)));
@@ -55,21 +70,16 @@ function RowGroup({
       <h3 style={{ margin: 0 }}>{title}</h3>
       <input name={`${prefix}_count`} type="hidden" value={rows.length} />
       {rows.map((row, i) => (
-        <div
-          key={i}
-          style={{
-            border: "1px solid var(--border)",
-            borderRadius: 14,
-            display: "grid",
-            gap: 10,
-            padding: 14,
-          }}
-        >
+        <div key={i} style={{ alignItems: "center", display: "flex", gap: 8 }}>
           <div
             style={{
+              border: "1px solid var(--border)",
+              borderRadius: 14,
               display: "grid",
+              flex: 1,
               gap: 10,
               gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
+              padding: 14,
             }}
           >
             <label className="grid" style={{ gap: 4 }}>
@@ -85,6 +95,7 @@ function RowGroup({
             <label className="grid" style={{ gap: 4, gridColumn: "span 2" }}>
               <span className="muted" style={{ fontSize: 13 }}>Description</span>
               <input
+                list={descriptionListId}
                 name={`${prefix}_desc_${i}`}
                 onChange={(e) => updateRow(i, { description: e.target.value })}
                 placeholder="Description"
@@ -94,7 +105,7 @@ function RowGroup({
               />
             </label>
             <label className="grid" style={{ gap: 4 }}>
-              <span className="muted" style={{ fontSize: 13 }}>Qty</span>
+              <span className="muted" style={{ fontSize: 13 }}>Hours</span>
               <input
                 name={`${prefix}_qty_${i}`}
                 onChange={(e) => updateRow(i, { qty: e.target.value })}
@@ -105,18 +116,7 @@ function RowGroup({
               />
             </label>
             <label className="grid" style={{ gap: 4 }}>
-              <span className="muted" style={{ fontSize: 13 }}>Unit</span>
-              <input
-                name={`${prefix}_unit_${i}`}
-                onChange={(e) => updateRow(i, { unit: e.target.value })}
-                placeholder="hour"
-                style={inputStyle}
-                type="text"
-                value={row.unit}
-              />
-            </label>
-            <label className="grid" style={{ gap: 4 }}>
-              <span className="muted" style={{ fontSize: 13 }}>Unit price</span>
+              <span className="muted" style={{ fontSize: 13 }}>Rate</span>
               <input
                 name={`${prefix}_price_${i}`}
                 onChange={(e) => updateRow(i, { price: e.target.value })}
@@ -127,23 +127,22 @@ function RowGroup({
                 value={row.price}
               />
             </label>
-          </div>
-          <div style={{ alignItems: "center", display: "flex", justifyContent: "space-between" }}>
-            <button
-              className="button secondary"
-              onClick={() => removeRow(i)}
-              style={{ fontSize: 13, padding: "6px 12px" }}
-              type="button"
-            >
-              Remove row
-            </button>
-            {row.description.trim() ? (
-              <div>
-                <span className="muted">Row total: </span>
-                <strong>{money(rowTotal(row))}</strong>
+            <div className="grid" style={{ gap: 4 }}>
+              <span className="muted" style={{ fontSize: 13 }}>Total</span>
+              <div style={{ ...inputStyle, background: "var(--accent-soft)", fontWeight: 700 }}>
+                {money(rowTotal(row))}
               </div>
-            ) : null}
+            </div>
           </div>
+          <button
+            aria-label="Remove row"
+            className="button secondary"
+            onClick={() => removeRow(i)}
+            style={{ color: "var(--danger)", flexShrink: 0, padding: 10 }}
+            type="button"
+          >
+            <TrashIcon />
+          </button>
         </div>
       ))}
       <button className="button secondary" onClick={addRow} style={{ justifySelf: "start" }} type="button">
@@ -157,10 +156,12 @@ export default function LineItemsSection({
   initialServiceRows,
   initialExpenseRows,
   minRows = 3,
+  descriptionOptions,
 }: {
   initialServiceRows?: LineItemRowData[];
   initialExpenseRows?: LineItemRowData[];
   minRows?: number;
+  descriptionOptions?: string[];
 }) {
   const [serviceRows, setServiceRows] = useState<LineItemRowData[]>(() =>
     makeRows(initialServiceRows, minRows)
@@ -168,17 +169,39 @@ export default function LineItemsSection({
   const [expenseRows, setExpenseRows] = useState<LineItemRowData[]>(() =>
     makeRows(initialExpenseRows, minRows)
   );
+  const datalistId = useId();
 
   const activeService = serviceRows.filter((row) => row.description.trim());
   const activeExpense = expenseRows.filter((row) => row.description.trim());
   const subtotal = activeService.reduce((sum, row) => sum + rowTotal(row), 0);
   const expenses = activeExpense.reduce((sum, row) => sum + rowTotal(row), 0);
   const grandTotal = subtotal + expenses;
+  const hasOptions = !!descriptionOptions?.length;
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <RowGroup prefix="svc" rows={serviceRows} setRows={setServiceRows} title="Service charges" />
-      <RowGroup prefix="exp" rows={expenseRows} setRows={setExpenseRows} title="Expenses" />
+      {hasOptions ? (
+        <datalist id={datalistId}>
+          {descriptionOptions!.map((opt) => (
+            <option key={opt} value={opt} />
+          ))}
+        </datalist>
+      ) : null}
+
+      <RowGroup
+        descriptionListId={hasOptions ? datalistId : undefined}
+        prefix="svc"
+        rows={serviceRows}
+        setRows={setServiceRows}
+        title="Service charges"
+      />
+      <RowGroup
+        descriptionListId={hasOptions ? datalistId : undefined}
+        prefix="exp"
+        rows={expenseRows}
+        setRows={setExpenseRows}
+        title="Expenses"
+      />
 
       <div
         className="card"

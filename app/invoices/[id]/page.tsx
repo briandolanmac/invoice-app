@@ -123,9 +123,9 @@ export default async function InvoiceDetailPage({ params }: InvoiceDetailPagePro
         >
           <div>
             <Link className="muted" href="/invoices" style={{ textDecoration: "none" }}>← Invoices</Link>
-            <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>{invoice.invoice_number}</h1>
+            <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>{agency?.name || "No agency"}</h1>
             <p className="muted" style={{ margin: "6px 0 0" }}>
-              {agency?.name || "No agency"} · {invoice.invoice_date}
+              {invoice.invoice_number} · {invoice.invoice_date}
               {invoice.tour_group_name ? ` · ${invoice.tour_group_name}` : ""}
             </p>
           </div>

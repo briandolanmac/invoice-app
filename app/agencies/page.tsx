@@ -64,7 +64,8 @@ export default async function AgenciesPage({
           ) : (
             <div style={{ display: "grid", gap: 12 }}>
               {agencies.map((agency) => (
-                <div
+                <Link
+                  href={`/agencies/${agency.id}`}
                   key={agency.id}
                   style={{
                     border: "1px solid var(--border)",
@@ -72,6 +73,7 @@ export default async function AgenciesPage({
                     display: "grid",
                     gap: 4,
                     padding: 14,
+                    textDecoration: "none",
                   }}
                 >
                   <strong>
@@ -86,7 +88,7 @@ export default async function AgenciesPage({
                     {" · "}
                     {agency.payment_terms} · Prefix {agency.default_invoice_prefix}
                   </span>
-                </div>
+                </Link>
               ))}
             </div>
           )}

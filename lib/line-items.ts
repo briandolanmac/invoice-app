@@ -31,7 +31,7 @@ function parseGroup(
       description,
       line_date: String(formData.get(`${prefix}_date_${i}`) || "").trim() || null,
       quantity: num(formData.get(`${prefix}_qty_${i}`), 1),
-      unit: String(formData.get(`${prefix}_unit_${i}`) || "").trim() || null,
+      unit: null, // no longer collected in the form (rows are labeled Hours/Rate); legacy rows keep their DB value
       unit_price: num(formData.get(`${prefix}_price_${i}`), 0),
       sort_order: sortOffset + i,
     });

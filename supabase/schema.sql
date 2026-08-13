@@ -226,6 +226,32 @@ create trigger invoice_line_items_set_updated_at
 before update on public.invoice_line_items
 for each row execute function public.set_updated_at();
 
+-- Standard/reusable line-item descriptions per agency (e.g. JTB's tour
+-- codes), added 2026-08-13. Offered as a datalist dropdown on the
+-- description field when creating/editing an invoice for that agency.
+create table if not exists public.agency_line_item_presets (
+  id uuid primary key default gen_random_uuid(),
+  agency_id uuid not null references public.agencies(id) on delete cascade,
+  description text not null,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.agency_line_item_presets enable row level security;
+
+drop policy if exists "Authenticated users can manage agency presets" on public.agency_line_item_presets;
+create policy "Authenticated users can manage agency presets"
+  on public.agency_line_item_presets for all
+  to authenticated
+  using (true)
+  with check (true);
+
+drop trigger if exists agency_line_item_presets_set_updated_at on public.agency_line_item_presets;
+create trigger agency_line_item_presets_set_updated_at
+before update on public.agency_line_item_presets
+for each row execute function public.set_updated_at();
+
 insert into public.agencies (name, customer_code, billing_address, payment_terms, default_invoice_prefix)
 values
   ('JTB USA Inc.', 'JTB', '3625 Del Amo Blvd., Ste 260, Torrance, CA 90503', 'Due on receipt', 'RD'),

@@ -3,13 +3,10 @@ import { redirect } from "next/navigation";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
 import { createInvoice } from "./actions";
-import LineItemsSection from "../LineItemsSection";
+import InvoiceFormFields from "../InvoiceFormFields";
 
-type AgencyOption = {
-  id: string;
-  name: string;
-  default_invoice_prefix: string | null;
-};
+type AgencyOption = { id: string; name: string };
+type PresetRow = { agency_id: string; description: string };
 
 export default async function NewInvoicePage({
   searchParams,
@@ -27,14 +24,26 @@ export default async function NewInvoicePage({
     redirect("/login");
   }
 
-  const { data: agencies } = usingDevSession
-    ? { data: [] as AgencyOption[] }
-    : await supabase
-        .from("agencies")
-        .select("id, name, default_invoice_prefix")
-        .eq("is_active", true)
-        .order("name")
-        .returns<AgencyOption[]>();
+  const [{ data: agencies }, { data: presetRows }] = usingDevSession
+    ? [{ data: [] as AgencyOption[] }, { data: [] as PresetRow[] }]
+    : await Promise.all([
+        supabase
+          .from("agencies")
+          .select("id, name")
+          .eq("is_active", true)
+          .order("name")
+          .returns<AgencyOption[]>(),
+        supabase
+          .from("agency_line_item_presets")
+          .select("agency_id, description")
+          .order("sort_order")
+          .returns<PresetRow[]>(),
+      ]);
+
+  const agencyPresets: Record<string, string[]> = {};
+  for (const row of presetRows || []) {
+    (agencyPresets[row.agency_id] ||= []).push(row.description);
+  }
 
   const today = new Date().toISOString().slice(0, 10);
 
@@ -60,58 +69,11 @@ export default async function NewInvoicePage({
           </section>
         ) : (
           <form action={createInvoice} className="grid" style={{ gap: 20 }}>
-            <section className="card" style={{ display: "grid", gap: 14, padding: 24 }}>
-              <h2 style={{ margin: 0 }}>Details</h2>
-              <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-                <label className="grid" style={{ gap: 6 }}>
-                  <span>Agency</span>
-                  <select defaultValue="" name="agency_id" required style={inputStyle}>
-                    <option disabled value="">Select an agency</option>
-                    {agencies.map((agency) => (
-                      <option key={agency.id} value={agency.id}>{agency.name}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className="grid" style={{ gap: 6 }}>
-                  <span>Invoice number</span>
-                  <input
-                    name="invoice_number"
-                    placeholder="e.g. RD-2026-001"
-                    required
-                    style={inputStyle}
-                    type="text"
-                  />
-                </label>
-              </div>
-              <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-                <label className="grid" style={{ gap: 6 }}>
-                  <span>Invoice date</span>
-                  <input defaultValue={today} name="invoice_date" style={inputStyle} type="date" />
-                </label>
-                <label className="grid" style={{ gap: 6 }}>
-                  <span>Due date</span>
-                  <input name="due_date" style={inputStyle} type="date" />
-                </label>
-              </div>
-              <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-                <label className="grid" style={{ gap: 6 }}>
-                  <span>Tour / group name</span>
-                  <input name="tour_group_name" style={inputStyle} type="text" />
-                </label>
-                <label className="grid" style={{ gap: 6 }}>
-                  <span>Customer reference</span>
-                  <input name="customer_reference" style={inputStyle} type="text" />
-                </label>
-              </div>
-            </section>
-
-            <section className="card" style={{ display: "grid", gap: 14, padding: 24 }}>
-              <h2 style={{ margin: 0 }}>Charges &amp; expenses</h2>
-              <p className="muted" style={{ margin: 0 }}>
-                Leave a row&apos;s description blank to skip it. Quantity defaults to 1, price to 0.
-              </p>
-              <LineItemsSection />
-            </section>
+            <InvoiceFormFields
+              agencies={agencies}
+              agencyPresets={agencyPresets}
+              defaultInvoiceDate={today}
+            />
 
             <section className="card" style={{ display: "grid", gap: 14, padding: 24 }}>
               <h2 style={{ margin: 0 }}>Notes</h2>

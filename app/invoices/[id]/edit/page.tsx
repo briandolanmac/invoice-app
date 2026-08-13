@@ -2,10 +2,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
-import LineItemsSection, { type LineItemRowData } from "../../LineItemsSection";
+import InvoiceFormFields from "../../InvoiceFormFields";
+import type { LineItemRowData } from "../../LineItemsSection";
 import { updateInvoice } from "./actions";
 
 type AgencyOption = { id: string; name: string };
+type PresetRow = { agency_id: string; description: string };
 
 type EditInvoicePageProps = {
   params: Promise<{ id: string }>;
@@ -28,7 +30,7 @@ export default async function EditInvoicePage({ params, searchParams }: EditInvo
     redirect(`/invoices/${id}`);
   }
 
-  const [{ data: invoice }, { data: agencies }, { data: items }] = await Promise.all([
+  const [{ data: invoice }, { data: agencies }, { data: presetRows }, { data: items }] = await Promise.all([
     supabase.from("invoices").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("agencies")
@@ -37,8 +39,13 @@ export default async function EditInvoicePage({ params, searchParams }: EditInvo
       .order("name")
       .returns<AgencyOption[]>(),
     supabase
+      .from("agency_line_item_presets")
+      .select("agency_id, description")
+      .order("sort_order")
+      .returns<PresetRow[]>(),
+    supabase
       .from("invoice_line_items")
-      .select("item_type, description, line_date, quantity, unit, unit_price")
+      .select("item_type, description, line_date, quantity, unit_price")
       .eq("invoice_id", id)
       .order("sort_order"),
   ]);
@@ -56,6 +63,11 @@ export default async function EditInvoicePage({ params, searchParams }: EditInvo
     );
   }
 
+  const agencyPresets: Record<string, string[]> = {};
+  for (const row of presetRows || []) {
+    (agencyPresets[row.agency_id] ||= []).push(row.description);
+  }
+
   // Legacy 'tip'/'adjustment' item types (from the historical import, before
   // the service/expense-only redesign) fold into the Service group here --
   // matches how they actually appeared on the real invoices (within the
@@ -64,13 +76,11 @@ export default async function EditInvoicePage({ params, searchParams }: EditInvo
     description: string;
     line_date: string | null;
     quantity: number;
-    unit: string | null;
     unit_price: number;
   }): LineItemRowData => ({
     description: item.description,
     line_date: item.line_date || "",
     qty: String(item.quantity),
-    unit: item.unit || "",
     price: String(item.unit_price),
   });
 
@@ -98,77 +108,20 @@ export default async function EditInvoicePage({ params, searchParams }: EditInvo
         <form action={updateInvoice} className="grid" style={{ gap: 20 }}>
           <input name="invoice_id" type="hidden" value={id} />
 
-          <section className="card" style={{ display: "grid", gap: 14, padding: 24 }}>
-            <h2 style={{ margin: 0 }}>Details</h2>
-            <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-              <label className="grid" style={{ gap: 6 }}>
-                <span>Agency</span>
-                <select defaultValue={invoice.agency_id} name="agency_id" required style={inputStyle}>
-                  {agencies?.map((agency) => (
-                    <option key={agency.id} value={agency.id}>{agency.name}</option>
-                  ))}
-                </select>
-              </label>
-              <label className="grid" style={{ gap: 6 }}>
-                <span>Invoice number</span>
-                <input
-                  defaultValue={invoice.invoice_number}
-                  name="invoice_number"
-                  required
-                  style={inputStyle}
-                  type="text"
-                />
-              </label>
-            </div>
-            <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-              <label className="grid" style={{ gap: 6 }}>
-                <span>Invoice date</span>
-                <input defaultValue={invoice.invoice_date} name="invoice_date" style={inputStyle} type="date" />
-              </label>
-              <label className="grid" style={{ gap: 6 }}>
-                <span>Due date</span>
-                <input defaultValue={invoice.due_date || ""} name="due_date" style={inputStyle} type="date" />
-              </label>
-              <label className="grid" style={{ gap: 6 }}>
-                <span>Status</span>
-                <select defaultValue={invoice.status} name="status" style={inputStyle}>
-                  <option value="draft">Draft</option>
-                  <option value="sent">Sent</option>
-                  <option value="paid">Paid</option>
-                  <option value="void">Void</option>
-                </select>
-              </label>
-            </div>
-            <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-              <label className="grid" style={{ gap: 6 }}>
-                <span>Tour / group name</span>
-                <input
-                  defaultValue={invoice.tour_group_name || ""}
-                  name="tour_group_name"
-                  style={inputStyle}
-                  type="text"
-                />
-              </label>
-              <label className="grid" style={{ gap: 6 }}>
-                <span>Customer reference</span>
-                <input
-                  defaultValue={invoice.customer_reference || ""}
-                  name="customer_reference"
-                  style={inputStyle}
-                  type="text"
-                />
-              </label>
-            </div>
-          </section>
-
-          <section className="card" style={{ display: "grid", gap: 14, padding: 24 }}>
-            <h2 style={{ margin: 0 }}>Charges &amp; expenses</h2>
-            <LineItemsSection
-              initialExpenseRows={initialExpenseRows}
-              initialServiceRows={initialServiceRows}
-              minRows={3}
-            />
-          </section>
+          <InvoiceFormFields
+            agencies={agencies || []}
+            agencyPresets={agencyPresets}
+            defaultAgencyId={invoice.agency_id}
+            defaultCustomerReference={invoice.customer_reference || ""}
+            defaultDueDate={invoice.due_date || ""}
+            defaultInvoiceDate={invoice.invoice_date}
+            defaultInvoiceNumber={invoice.invoice_number}
+            defaultStatus={invoice.status}
+            defaultTourGroupName={invoice.tour_group_name || ""}
+            initialExpenseRows={initialExpenseRows}
+            initialServiceRows={initialServiceRows}
+            minRows={3}
+          />
 
           <section className="card" style={{ display: "grid", gap: 14, padding: 24 }}>
             <h2 style={{ margin: 0 }}>Notes</h2>
