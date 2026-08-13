@@ -69,10 +69,6 @@ export default async function HomePage() {
             padding: 24,
           }}
         >
-          <h2 style={{ margin: 0 }}>Create an invoice</h2>
-          <p className="muted" style={{ lineHeight: 1.5, margin: 0 }}>
-            Start a fresh invoice, copy a previous one, or manage travel agencies.
-          </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
             <Link className="button" href="/invoices/new">New invoice</Link>
             <Link className="button secondary" href="/invoices">View invoices</Link>
@@ -99,9 +95,9 @@ export default async function HomePage() {
                     textDecoration: "none",
                   }}
                 >
-                  <strong>{invoice.invoice_number}</strong>
+                  <strong style={{ fontSize: 18 }}>{invoice.agencies?.name || "No agency"}</strong>
                   <span className="muted">
-                    {invoice.agencies?.name || "No agency"} · {invoice.invoice_date} · {invoice.status}
+                    {invoice.invoice_number} · {invoice.invoice_date} · {invoice.status}
                   </span>
                 </Link>
               ))}

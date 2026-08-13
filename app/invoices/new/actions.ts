@@ -53,5 +53,5 @@ export async function createInvoice(formData: FormData) {
     .update({ subtotal_amount: subtotal, expense_amount: expenses, total_amount: total })
     .eq("id", invoice.id);
 
-  redirect("/invoices");
+  redirect("/invoices?saved=1");
 }

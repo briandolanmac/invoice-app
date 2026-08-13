@@ -156,17 +156,17 @@ function RowGroup({
               padding: 14,
             }}
           >
-            <label className="grid" style={{ flex: "1 1 130px", gap: 4 }}>
+            <label className="grid" style={{ flex: "1 1 130px", gap: 4, minWidth: 0 }}>
               <span className="muted" style={{ fontSize: 13 }}>Date</span>
               <input
                 name={`${prefix}_date_${i}`}
                 onChange={(e) => updateRow(i, { line_date: e.target.value })}
-                style={inputStyle}
+                style={{ ...inputStyle, minWidth: 0 }}
                 type="date"
                 value={row.line_date}
               />
             </label>
-            <label className="grid" style={{ flex: "4 1 240px", gap: 4 }}>
+            <label className="grid" style={{ flex: "4 1 240px", gap: 4, minWidth: 0 }}>
               <span className="muted" style={{ fontSize: 13 }}>Description</span>
               {descriptionOptions?.length ? (
                 <DescriptionField
@@ -180,36 +180,47 @@ function RowGroup({
                   name={`${prefix}_desc_${i}`}
                   onChange={(e) => updateRow(i, { description: e.target.value })}
                   placeholder="Description"
-                  style={inputStyle}
+                  style={{ ...inputStyle, minWidth: 0 }}
                   type="text"
                   value={row.description}
                 />
               )}
             </label>
-            <label className="grid" style={{ flex: "0 1 70px", gap: 4 }}>
+            <label className="grid" style={{ flex: "0 1 70px", gap: 4, minWidth: 0 }}>
               <span className="muted" style={{ fontSize: 13 }}>Hours</span>
               <input
                 name={`${prefix}_qty_${i}`}
                 onChange={(e) => updateRow(i, { qty: e.target.value })}
                 step="0.01"
-                style={inputStyle}
+                style={{ ...inputStyle, minWidth: 0 }}
                 type="number"
                 value={row.qty}
               />
             </label>
-            <label className="grid" style={{ flex: "0 1 85px", gap: 4 }}>
+            <label className="grid" style={{ flex: "0 1 95px", gap: 4, minWidth: 0 }}>
               <span className="muted" style={{ fontSize: 13 }}>Rate</span>
-              <input
-                name={`${prefix}_price_${i}`}
-                onChange={(e) => updateRow(i, { price: e.target.value })}
-                placeholder="0.00"
-                step="0.01"
-                style={inputStyle}
-                type="number"
-                value={row.price}
-              />
+              <div style={{ position: "relative" }}>
+                <span
+                  className="muted"
+                  style={{ left: 10, position: "absolute", top: "50%", transform: "translateY(-50%)" }}
+                >
+                  $
+                </span>
+                <input
+                  name={`${prefix}_price_${i}`}
+                  onBlur={(e) => {
+                    if (e.target.value !== "") updateRow(i, { price: Number(e.target.value).toFixed(2) });
+                  }}
+                  onChange={(e) => updateRow(i, { price: e.target.value })}
+                  placeholder="0.00"
+                  step="0.01"
+                  style={{ ...inputStyle, minWidth: 0, paddingLeft: 20 }}
+                  type="number"
+                  value={row.price}
+                />
+              </div>
             </label>
-            <div className="grid" style={{ flex: "0 1 90px", gap: 4 }}>
+            <div className="grid" style={{ flex: "0 1 90px", gap: 4, minWidth: 0 }}>
               <span className="muted" style={{ fontSize: 13 }}>Total</span>
               <div style={{ ...inputStyle, background: "var(--accent-soft)", fontWeight: 700 }}>
                 {money(rowTotal(row))}

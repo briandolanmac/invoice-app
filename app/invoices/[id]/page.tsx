@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
+import SavedToast from "../SavedToast";
 import { copyInvoice, deleteInvoice } from "./actions";
 import { DeleteInvoiceForm } from "./DangerActions";
 
@@ -110,6 +112,9 @@ export default async function InvoiceDetailPage({ params }: InvoiceDetailPagePro
 
   return (
     <main className="page">
+      <Suspense fallback={null}>
+        <SavedToast />
+      </Suspense>
       <div className="shell">
         <header
           style={{

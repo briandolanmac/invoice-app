@@ -52,5 +52,5 @@ export async function updateInvoice(formData: FormData) {
     }
   }
 
-  redirect(`/invoices/${invoiceId}`);
+  redirect(`/invoices/${invoiceId}?saved=1`);
 }

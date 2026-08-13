@@ -2,7 +2,7 @@ import Link from "next/link";
 
 function InvoiceIcon() {
   return (
-    <svg fill="none" height="22" viewBox="0 0 24 24" width="22" xmlns="http://www.w3.org/2000/svg">
+    <svg fill="none" height="32" viewBox="0 0 24 24" width="32" xmlns="http://www.w3.org/2000/svg">
       <path
         d="M6 3h12a1 1 0 0 1 1 1v16l-3-2-3 2-3-2-3 2-3-2V4a1 1 0 0 1 1-1Z"
         stroke="currentColor"
@@ -27,7 +27,8 @@ export default function HomeButton() {
       style={{
         background: "var(--accent)",
         display: "flex",
-        padding: "10px 16px",
+        justifyContent: "center",
+        padding: "14px 16px",
         position: "sticky",
         top: 0,
         zIndex: 1000,
@@ -40,8 +41,9 @@ export default function HomeButton() {
           alignItems: "center",
           color: "white",
           display: "flex",
+          fontSize: 22,
           fontWeight: 700,
-          gap: 8,
+          gap: 10,
           textDecoration: "none",
         }}
       >

@@ -99,11 +99,6 @@ export default async function AgencyDetailPage({ params }: AgencyDetailPageProps
 
         <section className="card" style={{ display: "grid", gap: 14, marginBottom: 20, padding: 24 }}>
           <h2 style={{ margin: 0 }}>Standard descriptions</h2>
-          <p className="muted" style={{ margin: 0 }}>
-            These show up as a dropdown when picking a description for {agency.name} on new invoice
-            lines — saves retyping the same tour codes. Edit a description directly and save, or
-            remove it with the trash icon.
-          </p>
 
           {!presets?.length ? (
             <p className="muted" style={{ margin: 0 }}>
@@ -142,16 +137,16 @@ export default async function AgencyDetailPage({ params }: AgencyDetailPageProps
             </div>
           )}
 
-          <form action={addPreset} style={{ alignItems: "center", display: "flex", gap: 8 }}>
+          <form action={addPreset} style={{ display: "grid", gap: 8 }}>
             <input name="agency_id" type="hidden" value={id} />
-            <input
+            <textarea
               name="description"
               placeholder="e.g. 1010 Statue of Liberty Tour + One World Observation"
               required
-              style={{ ...inputStyle, flex: 1 }}
-              type="text"
+              rows={3}
+              style={{ ...inputStyle, resize: "vertical" }}
             />
-            <button className="button" style={{ flexShrink: 0 }} type="submit">
+            <button className="button" style={{ justifySelf: "start" }} type="submit">
               + Add description
             </button>
           </form>
@@ -174,40 +169,51 @@ export default async function AgencyDetailPage({ params }: AgencyDetailPageProps
                   key={contact.id}
                   style={{
                     alignItems: "center",
-                    display: "grid",
+                    border: "1px solid var(--border)",
+                    borderRadius: 14,
+                    display: "flex",
+                    flexWrap: "wrap",
                     gap: 8,
-                    gridTemplateColumns: "2fr 1.3fr 1.5fr auto auto",
+                    padding: 10,
                   }}
                 >
                   <input name="contact_id" type="hidden" value={contact.id} />
                   <input name="agency_id" type="hidden" value={id} />
-                  <input defaultValue={contact.name} name="name" placeholder="Name" style={inputStyle} type="text" />
+                  <input
+                    defaultValue={contact.name}
+                    name="name"
+                    placeholder="Name"
+                    style={{ ...inputStyle, flex: "2 1 160px", minWidth: 0 }}
+                    type="text"
+                  />
                   <input
                     defaultValue={contact.phone || ""}
                     name="phone"
                     placeholder="Phone"
-                    style={inputStyle}
+                    style={{ ...inputStyle, flex: "1 1 130px", minWidth: 0 }}
                     type="tel"
                   />
                   <input
                     defaultValue={contact.email || ""}
                     name="email"
                     placeholder="Email (optional)"
-                    style={inputStyle}
+                    style={{ ...inputStyle, flex: "2 1 160px", minWidth: 0 }}
                     type="email"
                   />
-                  <button className="button secondary" style={{ padding: "10px 14px" }} type="submit">
-                    Save
-                  </button>
-                  <button
-                    aria-label="Delete contact"
-                    className="button secondary"
-                    formAction={deleteContact}
-                    style={{ color: "var(--danger)", flexShrink: 0, padding: 10 }}
-                    type="submit"
-                  >
-                    <TrashIcon />
-                  </button>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button className="button secondary" style={{ padding: "10px 14px" }} type="submit">
+                      Save
+                    </button>
+                    <button
+                      aria-label="Delete contact"
+                      className="button secondary"
+                      formAction={deleteContact}
+                      style={{ color: "var(--danger)", flexShrink: 0, padding: 10 }}
+                      type="submit"
+                    >
+                      <TrashIcon />
+                    </button>
+                  </div>
                 </form>
               ))}
             </div>
@@ -215,12 +221,28 @@ export default async function AgencyDetailPage({ params }: AgencyDetailPageProps
 
           <form
             action={addContact}
-            style={{ alignItems: "center", display: "grid", gap: 8, gridTemplateColumns: "2fr 1.3fr 1.5fr auto" }}
+            style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8 }}
           >
             <input name="agency_id" type="hidden" value={id} />
-            <input name="name" placeholder="Name" required style={inputStyle} type="text" />
-            <input name="phone" placeholder="Phone" style={inputStyle} type="tel" />
-            <input name="email" placeholder="Email (optional)" style={inputStyle} type="email" />
+            <input
+              name="name"
+              placeholder="Name"
+              required
+              style={{ ...inputStyle, flex: "2 1 160px", minWidth: 0 }}
+              type="text"
+            />
+            <input
+              name="phone"
+              placeholder="Phone"
+              style={{ ...inputStyle, flex: "1 1 130px", minWidth: 0 }}
+              type="tel"
+            />
+            <input
+              name="email"
+              placeholder="Email (optional)"
+              style={{ ...inputStyle, flex: "2 1 160px", minWidth: 0 }}
+              type="email"
+            />
             <button className="button" style={{ flexShrink: 0 }} type="submit">
               + Add contact
             </button>
