@@ -16,8 +16,6 @@ export async function createAgency(formData: FormData) {
     name,
     customer_code: String(formData.get("customer_code") || "").trim() || null,
     billing_address: String(formData.get("billing_address") || "").trim() || null,
-    contact_name: String(formData.get("contact_name") || "").trim() || null,
-    contact_email: String(formData.get("contact_email") || "").trim() || null,
     payment_terms: String(formData.get("payment_terms") || "").trim() || "Due on receipt",
     default_invoice_prefix: String(formData.get("default_invoice_prefix") || "").trim() || "RD",
     notes: String(formData.get("notes") || "").trim() || null,

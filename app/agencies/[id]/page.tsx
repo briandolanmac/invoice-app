@@ -230,10 +230,6 @@ export default async function AgencyDetailPage({ params }: AgencyDetailPageProps
         <section className="card" style={{ display: "grid", gap: 6, padding: 24 }}>
           <h2 style={{ margin: 0 }}>Details</h2>
           <span className="muted">
-            {agency.contact_name || "No contact name"}
-            {agency.contact_email ? ` · ${agency.contact_email}` : ""}
-          </span>
-          <span className="muted">
             {agency.payment_terms} · Invoice prefix {agency.default_invoice_prefix}
           </span>
         </section>

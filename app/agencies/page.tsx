@@ -9,8 +9,6 @@ type AgencyRow = {
   name: string;
   customer_code: string | null;
   billing_address: string | null;
-  contact_name: string | null;
-  contact_email: string | null;
   payment_terms: string | null;
   default_invoice_prefix: string | null;
 };
@@ -35,7 +33,7 @@ export default async function AgenciesPage({
     ? { data: [] as AgencyRow[] }
     : await supabase
         .from("agencies")
-        .select("id, name, customer_code, billing_address, contact_name, contact_email, payment_terms, default_invoice_prefix")
+        .select("id, name, customer_code, billing_address, payment_terms, default_invoice_prefix")
         .eq("is_active", true)
         .order("name")
         .returns<AgencyRow[]>();
@@ -84,8 +82,6 @@ export default async function AgenciesPage({
                     <span className="muted">{agency.billing_address}</span>
                   ) : null}
                   <span className="muted">
-                    {[agency.contact_name, agency.contact_email].filter(Boolean).join(" · ") || "No contact on file"}
-                    {" · "}
                     {agency.payment_terms} · Prefix {agency.default_invoice_prefix}
                   </span>
                 </Link>
@@ -102,10 +98,9 @@ export default async function AgenciesPage({
               <Field label="Customer code" name="customer_code" placeholder="e.g. JTB" />
             </div>
             <Field label="Billing address" name="billing_address" />
-            <div style={{ display: "grid", gap: 14, gridTemplateColumns: "1fr 1fr" }}>
-              <Field label="Contact name" name="contact_name" />
-              <Field label="Contact email" name="contact_email" type="email" />
-            </div>
+            <p className="muted" style={{ margin: 0 }}>
+              Add contacts (with phone numbers) after saving, from the agency&apos;s own page.
+            </p>
             <div style={{ display: "grid", gap: 14, gridTemplateColumns: "1fr 1fr" }}>
               <Field label="Payment terms" name="payment_terms" placeholder="Due on receipt" />
               <Field label="Invoice prefix" name="default_invoice_prefix" placeholder="RD" />
