@@ -1,4 +1,4 @@
-# Tour Invoices App
+# Invoice App
 
 A small private web app for creating, copying, storing, and exporting tour-guide invoices as PDFs.
 
