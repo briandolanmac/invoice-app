@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 
-export const LINE_ITEM_ROWS = 6;
-
-type Row = {
+export type LineItemRowData = {
   type: string;
   description: string;
   qty: string;
@@ -12,26 +10,42 @@ type Row = {
   price: string;
 };
 
-const EMPTY_ROW: Row = { type: "service", description: "", qty: "1", unit: "", price: "" };
+const EMPTY_ROW: LineItemRowData = { type: "service", description: "", qty: "1", unit: "", price: "" };
 
 function money(n: number) {
   return `$${n.toFixed(2)}`;
 }
 
-function rowTotal(row: Row) {
+function rowTotal(row: LineItemRowData) {
   const qty = row.qty === "" ? 1 : Number(row.qty);
   const price = row.price === "" ? 0 : Number(row.price);
   if (!Number.isFinite(qty) || !Number.isFinite(price)) return 0;
   return qty * price;
 }
 
-export default function LineItemsSection() {
-  const [rows, setRows] = useState<Row[]>(
-    Array.from({ length: LINE_ITEM_ROWS }, () => ({ ...EMPTY_ROW }))
-  );
+export default function LineItemsSection({
+  initialRows,
+  minRows = 6,
+}: {
+  initialRows?: LineItemRowData[];
+  minRows?: number;
+}) {
+  const [rows, setRows] = useState<LineItemRowData[]>(() => {
+    const base = initialRows && initialRows.length ? [...initialRows] : [];
+    while (base.length < minRows) base.push({ ...EMPTY_ROW });
+    return base;
+  });
 
-  function updateRow(index: number, patch: Partial<Row>) {
+  function updateRow(index: number, patch: Partial<LineItemRowData>) {
     setRows((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)));
+  }
+
+  function addRow() {
+    setRows((prev) => [...prev, { ...EMPTY_ROW }]);
+  }
+
+  function removeRow(index: number) {
+    setRows((prev) => prev.filter((_, i) => i !== index));
   }
 
   const activeRows = rows.filter((row) => row.description.trim().length > 0);
@@ -45,6 +59,7 @@ export default function LineItemsSection() {
 
   return (
     <div style={{ display: "grid", gap: 14 }}>
+      <input name="line_count" type="hidden" value={rows.length} />
       {rows.map((row, i) => (
         <div
           key={i}
@@ -123,14 +138,33 @@ export default function LineItemsSection() {
               />
             </label>
           </div>
-          {row.description.trim() ? (
-            <div style={{ textAlign: "right" }}>
-              <span className="muted">Row total: </span>
-              <strong>{money(rowTotal(row))}</strong>
-            </div>
-          ) : null}
+          <div style={{ alignItems: "center", display: "flex", justifyContent: "space-between" }}>
+            <button
+              className="button secondary"
+              onClick={() => removeRow(i)}
+              style={{ fontSize: 13, padding: "6px 12px" }}
+              type="button"
+            >
+              Remove row
+            </button>
+            {row.description.trim() ? (
+              <div>
+                <span className="muted">Row total: </span>
+                <strong>{money(rowTotal(row))}</strong>
+              </div>
+            ) : null}
+          </div>
         </div>
       ))}
+
+      <button
+        className="button secondary"
+        onClick={addRow}
+        style={{ justifySelf: "start" }}
+        type="button"
+      >
+        + Add line
+      </button>
 
       <div
         className="card"

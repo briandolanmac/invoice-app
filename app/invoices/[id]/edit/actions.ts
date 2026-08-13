@@ -4,54 +4,53 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { parseLineItems, totalsFor } from "@/lib/line-items";
 
-export async function createInvoice(formData: FormData) {
+export async function updateInvoice(formData: FormData) {
+  const invoiceId = String(formData.get("invoice_id") || "");
   const invoiceNumber = String(formData.get("invoice_number") || "").trim();
   const agencyId = String(formData.get("agency_id") || "").trim();
 
   if (!invoiceNumber) {
-    redirect("/invoices/new?error=Invoice%20number%20is%20required");
+    redirect(`/invoices/${invoiceId}/edit?error=Invoice%20number%20is%20required`);
   }
   if (!agencyId) {
-    redirect("/invoices/new?error=Please%20choose%20an%20agency");
+    redirect(`/invoices/${invoiceId}/edit?error=Please%20choose%20an%20agency`);
   }
 
   const rows = parseLineItems(formData);
+  const { subtotal, expenses, total } = totalsFor(rows);
   const supabase = await createClient();
 
-  const { data: invoice, error: invoiceError } = await supabase
+  const { error: updateError } = await supabase
     .from("invoices")
-    .insert({
+    .update({
       agency_id: agencyId,
       invoice_number: invoiceNumber,
       invoice_date: String(formData.get("invoice_date") || "").trim() || undefined,
       due_date: String(formData.get("due_date") || "").trim() || null,
       customer_reference: String(formData.get("customer_reference") || "").trim() || null,
       tour_group_name: String(formData.get("tour_group_name") || "").trim() || null,
+      status: String(formData.get("status") || "draft"),
       notes: String(formData.get("notes") || "").trim() || null,
       payment_instructions: String(formData.get("payment_instructions") || "").trim() || null,
+      subtotal_amount: subtotal,
+      expense_amount: expenses,
+      total_amount: total,
     })
-    .select("id")
-    .single();
+    .eq("id", invoiceId);
 
-  if (invoiceError || !invoice) {
-    redirect(`/invoices/new?error=${encodeURIComponent(invoiceError?.message || "Could not create invoice")}`);
+  if (updateError) {
+    redirect(`/invoices/${invoiceId}/edit?error=${encodeURIComponent(updateError.message)}`);
   }
 
+  await supabase.from("invoice_line_items").delete().eq("invoice_id", invoiceId);
   if (rows.length > 0) {
     const { error: itemsError } = await supabase
       .from("invoice_line_items")
-      .insert(rows.map((row) => ({ ...row, invoice_id: invoice.id })));
-
+      .insert(rows.map((row) => ({ ...row, invoice_id: invoiceId })));
     if (itemsError) {
-      redirect(`/invoices/new?error=${encodeURIComponent(itemsError.message)}`);
+      redirect(`/invoices/${invoiceId}/edit?error=${encodeURIComponent(itemsError.message)}`);
     }
   }
 
-  const { subtotal, expenses, total } = totalsFor(rows);
-  await supabase
-    .from("invoices")
-    .update({ subtotal_amount: subtotal, expense_amount: expenses, total_amount: total })
-    .eq("id", invoice.id);
-
-  redirect("/invoices");
+  redirect(`/invoices/${invoiceId}`);
 }

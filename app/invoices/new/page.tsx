@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
 import { createInvoice } from "./actions";
-import LineItemsSection from "./LineItemsSection";
+import LineItemsSection from "../LineItemsSection";
 
 type AgencyOption = {
   id: string;

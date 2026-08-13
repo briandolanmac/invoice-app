@@ -1,0 +1,183 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { hasDevSession } from "@/lib/dev-auth-server";
+import { createClient } from "@/lib/supabase/server";
+import LineItemsSection, { type LineItemRowData } from "../../LineItemsSection";
+import { updateInvoice } from "./actions";
+
+type AgencyOption = { id: string; name: string };
+
+type EditInvoicePageProps = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
+};
+
+export default async function EditInvoicePage({ params, searchParams }: EditInvoicePageProps) {
+  const { id } = await params;
+  const search = await searchParams;
+  const usingDevSession = await hasDevSession();
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user && !usingDevSession) {
+    redirect("/login");
+  }
+  if (usingDevSession) {
+    redirect(`/invoices/${id}`);
+  }
+
+  const [{ data: invoice }, { data: agencies }, { data: items }] = await Promise.all([
+    supabase.from("invoices").select("*").eq("id", id).maybeSingle(),
+    supabase
+      .from("agencies")
+      .select("id, name")
+      .eq("is_active", true)
+      .order("name")
+      .returns<AgencyOption[]>(),
+    supabase
+      .from("invoice_line_items")
+      .select("item_type, description, quantity, unit, unit_price")
+      .eq("invoice_id", id)
+      .order("sort_order"),
+  ]);
+
+  if (!invoice) {
+    return (
+      <main className="page">
+        <div className="shell">
+          <Link className="muted" href="/invoices" style={{ textDecoration: "none" }}>← Invoices</Link>
+          <section className="card" style={{ marginTop: 16, padding: 24 }}>
+            <p className="muted" style={{ margin: 0 }}>No invoice found with that ID.</p>
+          </section>
+        </div>
+      </main>
+    );
+  }
+
+  const initialRows: LineItemRowData[] = (items || []).map((item) => ({
+    type: item.item_type,
+    description: item.description,
+    qty: String(item.quantity),
+    unit: item.unit || "",
+    price: String(item.unit_price),
+  }));
+
+  return (
+    <main className="page">
+      <div className="shell">
+        <header style={{ marginBottom: 24 }}>
+          <Link className="muted" href={`/invoices/${id}`} style={{ textDecoration: "none" }}>
+            ← {invoice.invoice_number}
+          </Link>
+          <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>Edit invoice</h1>
+        </header>
+
+        {search.error ? (
+          <p style={{ color: "var(--danger)", fontWeight: 700, marginBottom: 16 }}>{search.error}</p>
+        ) : null}
+
+        <form action={updateInvoice} className="grid" style={{ gap: 20 }}>
+          <input name="invoice_id" type="hidden" value={id} />
+
+          <section className="card" style={{ display: "grid", gap: 14, padding: 24 }}>
+            <h2 style={{ margin: 0 }}>Details</h2>
+            <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+              <label className="grid" style={{ gap: 6 }}>
+                <span>Agency</span>
+                <select defaultValue={invoice.agency_id} name="agency_id" required style={inputStyle}>
+                  {agencies?.map((agency) => (
+                    <option key={agency.id} value={agency.id}>{agency.name}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="grid" style={{ gap: 6 }}>
+                <span>Invoice number</span>
+                <input
+                  defaultValue={invoice.invoice_number}
+                  name="invoice_number"
+                  required
+                  style={inputStyle}
+                  type="text"
+                />
+              </label>
+            </div>
+            <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+              <label className="grid" style={{ gap: 6 }}>
+                <span>Invoice date</span>
+                <input defaultValue={invoice.invoice_date} name="invoice_date" style={inputStyle} type="date" />
+              </label>
+              <label className="grid" style={{ gap: 6 }}>
+                <span>Due date</span>
+                <input defaultValue={invoice.due_date || ""} name="due_date" style={inputStyle} type="date" />
+              </label>
+              <label className="grid" style={{ gap: 6 }}>
+                <span>Status</span>
+                <select defaultValue={invoice.status} name="status" style={inputStyle}>
+                  <option value="draft">Draft</option>
+                  <option value="sent">Sent</option>
+                  <option value="paid">Paid</option>
+                  <option value="void">Void</option>
+                </select>
+              </label>
+            </div>
+            <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+              <label className="grid" style={{ gap: 6 }}>
+                <span>Tour / group name</span>
+                <input
+                  defaultValue={invoice.tour_group_name || ""}
+                  name="tour_group_name"
+                  style={inputStyle}
+                  type="text"
+                />
+              </label>
+              <label className="grid" style={{ gap: 6 }}>
+                <span>Customer reference</span>
+                <input
+                  defaultValue={invoice.customer_reference || ""}
+                  name="customer_reference"
+                  style={inputStyle}
+                  type="text"
+                />
+              </label>
+            </div>
+          </section>
+
+          <section className="card" style={{ display: "grid", gap: 14, padding: 24 }}>
+            <h2 style={{ margin: 0 }}>Charges &amp; expenses</h2>
+            <LineItemsSection initialRows={initialRows} minRows={initialRows.length || 6} />
+          </section>
+
+          <section className="card" style={{ display: "grid", gap: 14, padding: 24 }}>
+            <h2 style={{ margin: 0 }}>Notes</h2>
+            <label className="grid" style={{ gap: 6 }}>
+              <span>Notes</span>
+              <textarea defaultValue={invoice.notes || ""} name="notes" rows={3} style={inputStyle} />
+            </label>
+            <label className="grid" style={{ gap: 6 }}>
+              <span>Payment instructions</span>
+              <textarea
+                defaultValue={invoice.payment_instructions || ""}
+                name="payment_instructions"
+                rows={2}
+                style={inputStyle}
+              />
+            </label>
+          </section>
+
+          <button className="button" style={{ justifySelf: "start" }} type="submit">
+            Save changes
+          </button>
+        </form>
+      </div>
+    </main>
+  );
+}
+
+const inputStyle = {
+  border: "1px solid var(--border)",
+  borderRadius: 12,
+  fontFamily: "inherit",
+  padding: "12px 14px",
+};
