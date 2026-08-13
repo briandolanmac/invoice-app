@@ -2,7 +2,7 @@ import Link from "next/link";
 
 function InvoiceIcon() {
   return (
-    <svg fill="none" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <svg fill="none" height="22" viewBox="0 0 24 24" width="22" xmlns="http://www.w3.org/2000/svg">
       <path
         d="M6 3h12a1 1 0 0 1 1 1v16l-3-2-3 2-3-2-3 2-3-2V4a1 1 0 0 1 1-1Z"
         stroke="currentColor"
@@ -14,28 +14,40 @@ function InvoiceIcon() {
   );
 }
 
+/**
+ * Sticky top bar (not a floating overlay) so it always reserves its own
+ * space in normal document flow -- a fixed-position floating circle was
+ * tried first but overlapped page content on shorter pages (e.g. sat
+ * directly on top of the login form's email field). Sticky guarantees it
+ * never covers anything, on every page, at every viewport size.
+ */
 export default function HomeButton() {
   return (
-    <Link
-      aria-label="Home"
-      href="/"
+    <div
       style={{
-        alignItems: "center",
         background: "var(--accent)",
-        borderRadius: "999px",
-        bottom: 20,
-        boxShadow: "0 8px 20px rgb(214 51 108 / 35%)",
-        color: "white",
         display: "flex",
-        height: 52,
-        justifyContent: "center",
-        left: 20,
-        position: "fixed",
-        width: 52,
+        padding: "10px 16px",
+        position: "sticky",
+        top: 0,
         zIndex: 1000,
       }}
     >
-      <InvoiceIcon />
-    </Link>
+      <Link
+        aria-label="Home"
+        href="/"
+        style={{
+          alignItems: "center",
+          color: "white",
+          display: "flex",
+          fontWeight: 700,
+          gap: 8,
+          textDecoration: "none",
+        }}
+      >
+        <InvoiceIcon />
+        Invoice App
+      </Link>
+    </div>
   );
 }

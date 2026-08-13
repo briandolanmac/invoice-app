@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useState } from "react";
 
 export type LineItemRowData = {
   description: string;
@@ -42,18 +42,92 @@ function TrashIcon() {
   );
 }
 
+/**
+ * Custom dropdown for the description field, replacing native HTML
+ * <datalist> -- iOS Safari doesn't render datalist as an actual dropdown,
+ * it shows a horizontal row of suggestion chips above the keyboard
+ * (easy to miss, doesn't look tappable). This renders a real listbox
+ * that behaves the same on every device.
+ */
+function DescriptionField({
+  name,
+  onChange,
+  options,
+  value,
+}: {
+  name: string;
+  onChange: (value: string) => void;
+  options: string[];
+  value: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const filtered = value.trim()
+    ? options.filter((opt) => opt.toLowerCase().includes(value.trim().toLowerCase()))
+    : options;
+
+  return (
+    <div style={{ position: "relative" }}>
+      <input
+        autoComplete="off"
+        name={name}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={() => setOpen(true)}
+        placeholder="Description"
+        style={inputStyle}
+        type="text"
+        value={value}
+      />
+      {open && filtered.length > 0 ? (
+        <div
+          style={{
+            background: "var(--card)",
+            border: "1px solid var(--border)",
+            borderRadius: 12,
+            boxShadow: "0 10px 24px rgb(58 31 46 / 15%)",
+            left: 0,
+            maxHeight: 220,
+            overflowY: "auto",
+            position: "absolute",
+            right: 0,
+            top: "calc(100% + 4px)",
+            zIndex: 50,
+          }}
+        >
+          {filtered.map((opt) => (
+            <div
+              key={opt}
+              onClick={() => {
+                onChange(opt);
+                setOpen(false);
+              }}
+              style={{
+                cursor: "pointer",
+                fontSize: 14,
+                padding: "10px 12px",
+              }}
+            >
+              {opt}
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function RowGroup({
   title,
   prefix,
   rows,
   setRows,
-  descriptionListId,
+  descriptionOptions,
 }: {
   title: string;
   prefix: "svc" | "exp";
   rows: LineItemRowData[];
   setRows: React.Dispatch<React.SetStateAction<LineItemRowData[]>>;
-  descriptionListId?: string;
+  descriptionOptions?: string[];
 }) {
   function updateRow(index: number, patch: Partial<LineItemRowData>) {
     setRows((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)));
@@ -94,15 +168,23 @@ function RowGroup({
             </label>
             <label className="grid" style={{ flex: "4 1 240px", gap: 4 }}>
               <span className="muted" style={{ fontSize: 13 }}>Description</span>
-              <input
-                list={descriptionListId}
-                name={`${prefix}_desc_${i}`}
-                onChange={(e) => updateRow(i, { description: e.target.value })}
-                placeholder="Description"
-                style={inputStyle}
-                type="text"
-                value={row.description}
-              />
+              {descriptionOptions?.length ? (
+                <DescriptionField
+                  name={`${prefix}_desc_${i}`}
+                  onChange={(value) => updateRow(i, { description: value })}
+                  options={descriptionOptions}
+                  value={row.description}
+                />
+              ) : (
+                <input
+                  name={`${prefix}_desc_${i}`}
+                  onChange={(e) => updateRow(i, { description: e.target.value })}
+                  placeholder="Description"
+                  style={inputStyle}
+                  type="text"
+                  value={row.description}
+                />
+              )}
             </label>
             <label className="grid" style={{ flex: "0 1 70px", gap: 4 }}>
               <span className="muted" style={{ fontSize: 13 }}>Hours</span>
@@ -169,34 +251,24 @@ export default function LineItemsSection({
   const [expenseRows, setExpenseRows] = useState<LineItemRowData[]>(() =>
     makeRows(initialExpenseRows, minRows)
   );
-  const datalistId = useId();
 
   const activeService = serviceRows.filter((row) => row.description.trim());
   const activeExpense = expenseRows.filter((row) => row.description.trim());
   const subtotal = activeService.reduce((sum, row) => sum + rowTotal(row), 0);
   const expenses = activeExpense.reduce((sum, row) => sum + rowTotal(row), 0);
   const grandTotal = subtotal + expenses;
-  const hasOptions = !!descriptionOptions?.length;
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      {hasOptions ? (
-        <datalist id={datalistId}>
-          {descriptionOptions!.map((opt) => (
-            <option key={opt} value={opt} />
-          ))}
-        </datalist>
-      ) : null}
-
       <RowGroup
-        descriptionListId={hasOptions ? datalistId : undefined}
+        descriptionOptions={descriptionOptions}
         prefix="svc"
         rows={serviceRows}
         setRows={setServiceRows}
         title="Service charges"
       />
       <RowGroup
-        descriptionListId={hasOptions ? datalistId : undefined}
+        descriptionOptions={descriptionOptions}
         prefix="exp"
         rows={expenseRows}
         setRows={setExpenseRows}
