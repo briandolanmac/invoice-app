@@ -3,14 +3,13 @@ import { redirect } from "next/navigation";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
 import { createInvoice } from "./actions";
+import LineItemsSection from "./LineItemsSection";
 
 type AgencyOption = {
   id: string;
   name: string;
   default_invoice_prefix: string | null;
 };
-
-const LINE_ITEM_ROWS = 6;
 
 export default async function NewInvoicePage({
   searchParams,
@@ -63,7 +62,7 @@ export default async function NewInvoicePage({
           <form action={createInvoice} className="grid" style={{ gap: 20 }}>
             <section className="card" style={{ display: "grid", gap: 14, padding: 24 }}>
               <h2 style={{ margin: 0 }}>Details</h2>
-              <div style={{ display: "grid", gap: 14, gridTemplateColumns: "2fr 1fr" }}>
+              <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
                 <label className="grid" style={{ gap: 6 }}>
                   <span>Agency</span>
                   <select defaultValue="" name="agency_id" required style={inputStyle}>
@@ -84,7 +83,7 @@ export default async function NewInvoicePage({
                   />
                 </label>
               </div>
-              <div style={{ display: "grid", gap: 14, gridTemplateColumns: "1fr 1fr" }}>
+              <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
                 <label className="grid" style={{ gap: 6 }}>
                   <span>Invoice date</span>
                   <input defaultValue={today} name="invoice_date" style={inputStyle} type="date" />
@@ -94,7 +93,7 @@ export default async function NewInvoicePage({
                   <input name="due_date" style={inputStyle} type="date" />
                 </label>
               </div>
-              <div style={{ display: "grid", gap: 14, gridTemplateColumns: "1fr 1fr" }}>
+              <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
                 <label className="grid" style={{ gap: 6 }}>
                   <span>Tour / group name</span>
                   <input name="tour_group_name" style={inputStyle} type="text" />
@@ -111,52 +110,7 @@ export default async function NewInvoicePage({
               <p className="muted" style={{ margin: 0 }}>
                 Leave a row&apos;s description blank to skip it. Quantity defaults to 1, price to 0.
               </p>
-              <div style={{ display: "grid", gap: 10 }}>
-                <div
-                  className="muted"
-                  style={{
-                    display: "grid",
-                    fontSize: 13,
-                    gridTemplateColumns: "110px 2fr 80px 90px 100px",
-                    gap: 8,
-                  }}
-                >
-                  <span>Type</span>
-                  <span>Description</span>
-                  <span>Qty</span>
-                  <span>Unit</span>
-                  <span>Unit price</span>
-                </div>
-                {Array.from({ length: LINE_ITEM_ROWS }).map((_, i) => (
-                  <div
-                    key={i}
-                    style={{ display: "grid", gap: 8, gridTemplateColumns: "110px 2fr 80px 90px 100px" }}
-                  >
-                    <select defaultValue="service" name={`line_type_${i}`} style={inputStyle}>
-                      <option value="service">Service</option>
-                      <option value="expense">Expense</option>
-                      <option value="tip">Tip</option>
-                      <option value="adjustment">Adjustment</option>
-                    </select>
-                    <input name={`line_desc_${i}`} placeholder="Description" style={inputStyle} type="text" />
-                    <input
-                      defaultValue={1}
-                      name={`line_qty_${i}`}
-                      step="0.01"
-                      style={inputStyle}
-                      type="number"
-                    />
-                    <input name={`line_unit_${i}`} placeholder="hour" style={inputStyle} type="text" />
-                    <input
-                      name={`line_price_${i}`}
-                      placeholder="0.00"
-                      step="0.01"
-                      style={inputStyle}
-                      type="number"
-                    />
-                  </div>
-                ))}
-              </div>
+              <LineItemsSection />
             </section>
 
             <section className="card" style={{ display: "grid", gap: 14, padding: 24 }}>
