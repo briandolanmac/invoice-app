@@ -3,14 +3,14 @@
 import { useState } from "react";
 
 export type LineItemRowData = {
-  type: string;
   description: string;
+  line_date: string;
   qty: string;
   unit: string;
   price: string;
 };
 
-const EMPTY_ROW: LineItemRowData = { type: "service", description: "", qty: "1", unit: "", price: "" };
+const EMPTY_ROW: LineItemRowData = { description: "", line_date: "", qty: "1", unit: "", price: "" };
 
 function money(n: number) {
   return `$${n.toFixed(2)}`;
@@ -23,43 +23,37 @@ function rowTotal(row: LineItemRowData) {
   return qty * price;
 }
 
-export default function LineItemsSection({
-  initialRows,
-  minRows = 6,
-}: {
-  initialRows?: LineItemRowData[];
-  minRows?: number;
-}) {
-  const [rows, setRows] = useState<LineItemRowData[]>(() => {
-    const base = initialRows && initialRows.length ? [...initialRows] : [];
-    while (base.length < minRows) base.push({ ...EMPTY_ROW });
-    return base;
-  });
+function makeRows(initial: LineItemRowData[] | undefined, minRows: number) {
+  const base = initial && initial.length ? [...initial] : [];
+  while (base.length < minRows) base.push({ ...EMPTY_ROW });
+  return base;
+}
 
+function RowGroup({
+  title,
+  prefix,
+  rows,
+  setRows,
+}: {
+  title: string;
+  prefix: "svc" | "exp";
+  rows: LineItemRowData[];
+  setRows: React.Dispatch<React.SetStateAction<LineItemRowData[]>>;
+}) {
   function updateRow(index: number, patch: Partial<LineItemRowData>) {
     setRows((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)));
   }
-
   function addRow() {
     setRows((prev) => [...prev, { ...EMPTY_ROW }]);
   }
-
   function removeRow(index: number) {
     setRows((prev) => prev.filter((_, i) => i !== index));
   }
 
-  const activeRows = rows.filter((row) => row.description.trim().length > 0);
-  const subtotal = activeRows
-    .filter((row) => row.type !== "expense")
-    .reduce((sum, row) => sum + rowTotal(row), 0);
-  const expenses = activeRows
-    .filter((row) => row.type === "expense")
-    .reduce((sum, row) => sum + rowTotal(row), 0);
-  const grandTotal = subtotal + expenses;
-
   return (
     <div style={{ display: "grid", gap: 14 }}>
-      <input name="line_count" type="hidden" value={rows.length} />
+      <h3 style={{ margin: 0 }}>{title}</h3>
+      <input name={`${prefix}_count`} type="hidden" value={rows.length} />
       {rows.map((row, i) => (
         <div
           key={i}
@@ -79,23 +73,19 @@ export default function LineItemsSection({
             }}
           >
             <label className="grid" style={{ gap: 4 }}>
-              <span className="muted" style={{ fontSize: 13 }}>Type</span>
-              <select
-                name={`line_type_${i}`}
-                onChange={(e) => updateRow(i, { type: e.target.value })}
+              <span className="muted" style={{ fontSize: 13 }}>Date</span>
+              <input
+                name={`${prefix}_date_${i}`}
+                onChange={(e) => updateRow(i, { line_date: e.target.value })}
                 style={inputStyle}
-                value={row.type}
-              >
-                <option value="service">Service</option>
-                <option value="expense">Expense</option>
-                <option value="tip">Tip</option>
-                <option value="adjustment">Adjustment</option>
-              </select>
+                type="date"
+                value={row.line_date}
+              />
             </label>
             <label className="grid" style={{ gap: 4, gridColumn: "span 2" }}>
               <span className="muted" style={{ fontSize: 13 }}>Description</span>
               <input
-                name={`line_desc_${i}`}
+                name={`${prefix}_desc_${i}`}
                 onChange={(e) => updateRow(i, { description: e.target.value })}
                 placeholder="Description"
                 style={inputStyle}
@@ -106,7 +96,7 @@ export default function LineItemsSection({
             <label className="grid" style={{ gap: 4 }}>
               <span className="muted" style={{ fontSize: 13 }}>Qty</span>
               <input
-                name={`line_qty_${i}`}
+                name={`${prefix}_qty_${i}`}
                 onChange={(e) => updateRow(i, { qty: e.target.value })}
                 step="0.01"
                 style={inputStyle}
@@ -117,7 +107,7 @@ export default function LineItemsSection({
             <label className="grid" style={{ gap: 4 }}>
               <span className="muted" style={{ fontSize: 13 }}>Unit</span>
               <input
-                name={`line_unit_${i}`}
+                name={`${prefix}_unit_${i}`}
                 onChange={(e) => updateRow(i, { unit: e.target.value })}
                 placeholder="hour"
                 style={inputStyle}
@@ -128,7 +118,7 @@ export default function LineItemsSection({
             <label className="grid" style={{ gap: 4 }}>
               <span className="muted" style={{ fontSize: 13 }}>Unit price</span>
               <input
-                name={`line_price_${i}`}
+                name={`${prefix}_price_${i}`}
                 onChange={(e) => updateRow(i, { price: e.target.value })}
                 placeholder="0.00"
                 step="0.01"
@@ -156,15 +146,39 @@ export default function LineItemsSection({
           </div>
         </div>
       ))}
-
-      <button
-        className="button secondary"
-        onClick={addRow}
-        style={{ justifySelf: "start" }}
-        type="button"
-      >
-        + Add line
+      <button className="button secondary" onClick={addRow} style={{ justifySelf: "start" }} type="button">
+        + Add row
       </button>
+    </div>
+  );
+}
+
+export default function LineItemsSection({
+  initialServiceRows,
+  initialExpenseRows,
+  minRows = 3,
+}: {
+  initialServiceRows?: LineItemRowData[];
+  initialExpenseRows?: LineItemRowData[];
+  minRows?: number;
+}) {
+  const [serviceRows, setServiceRows] = useState<LineItemRowData[]>(() =>
+    makeRows(initialServiceRows, minRows)
+  );
+  const [expenseRows, setExpenseRows] = useState<LineItemRowData[]>(() =>
+    makeRows(initialExpenseRows, minRows)
+  );
+
+  const activeService = serviceRows.filter((row) => row.description.trim());
+  const activeExpense = expenseRows.filter((row) => row.description.trim());
+  const subtotal = activeService.reduce((sum, row) => sum + rowTotal(row), 0);
+  const expenses = activeExpense.reduce((sum, row) => sum + rowTotal(row), 0);
+  const grandTotal = subtotal + expenses;
+
+  return (
+    <div style={{ display: "grid", gap: 24 }}>
+      <RowGroup prefix="svc" rows={serviceRows} setRows={setServiceRows} title="Service charges" />
+      <RowGroup prefix="exp" rows={expenseRows} setRows={setExpenseRows} title="Expenses" />
 
       <div
         className="card"

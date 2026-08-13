@@ -38,7 +38,7 @@ export default async function EditInvoicePage({ params, searchParams }: EditInvo
       .returns<AgencyOption[]>(),
     supabase
       .from("invoice_line_items")
-      .select("item_type, description, quantity, unit, unit_price")
+      .select("item_type, description, line_date, quantity, unit, unit_price")
       .eq("invoice_id", id)
       .order("sort_order"),
   ]);
@@ -56,13 +56,30 @@ export default async function EditInvoicePage({ params, searchParams }: EditInvo
     );
   }
 
-  const initialRows: LineItemRowData[] = (items || []).map((item) => ({
-    type: item.item_type,
+  // Legacy 'tip'/'adjustment' item types (from the historical import, before
+  // the service/expense-only redesign) fold into the Service group here --
+  // matches how they actually appeared on the real invoices (within the
+  // SERVICE CHARGES table, not called out separately).
+  const toRow = (item: {
+    description: string;
+    line_date: string | null;
+    quantity: number;
+    unit: string | null;
+    unit_price: number;
+  }): LineItemRowData => ({
     description: item.description,
+    line_date: item.line_date || "",
     qty: String(item.quantity),
     unit: item.unit || "",
     price: String(item.unit_price),
-  }));
+  });
+
+  const initialServiceRows: LineItemRowData[] = (items || [])
+    .filter((item) => item.item_type !== "expense")
+    .map(toRow);
+  const initialExpenseRows: LineItemRowData[] = (items || [])
+    .filter((item) => item.item_type === "expense")
+    .map(toRow);
 
   return (
     <main className="page">
@@ -146,7 +163,11 @@ export default async function EditInvoicePage({ params, searchParams }: EditInvo
 
           <section className="card" style={{ display: "grid", gap: 14, padding: 24 }}>
             <h2 style={{ margin: 0 }}>Charges &amp; expenses</h2>
-            <LineItemsSection initialRows={initialRows} minRows={initialRows.length || 6} />
+            <LineItemsSection
+              initialExpenseRows={initialExpenseRows}
+              initialServiceRows={initialServiceRows}
+              minRows={3}
+            />
           </section>
 
           <section className="card" style={{ display: "grid", gap: 14, padding: 24 }}>
