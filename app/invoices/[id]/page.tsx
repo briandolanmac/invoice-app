@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import SavedToast from "../SavedToast";
 import { copyInvoice, deleteInvoice } from "./actions";
 import { DeleteInvoiceForm } from "./DangerActions";
+import { generatePdf } from "./pdf-actions";
 
 type InvoiceDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -136,6 +137,10 @@ export default async function InvoiceDetailPage({ params }: InvoiceDetailPagePro
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
             <Link className="button secondary" href={`/invoices/${id}/edit`}>Edit</Link>
+            <form action={generatePdf}>
+              <input name="invoice_id" type="hidden" value={id} />
+              <button className="button" type="submit">Generate PDF</button>
+            </form>
             <form action={copyInvoice}>
               <input name="invoice_id" type="hidden" value={id} />
               <button className="button secondary" type="submit">Copy as new</button>
