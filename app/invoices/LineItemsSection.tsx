@@ -75,14 +75,14 @@ function RowGroup({
             style={{
               border: "1px solid var(--border)",
               borderRadius: 14,
-              display: "grid",
+              display: "flex",
               flex: 1,
+              flexWrap: "wrap",
               gap: 10,
-              gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
               padding: 14,
             }}
           >
-            <label className="grid" style={{ gap: 4 }}>
+            <label className="grid" style={{ flex: "1 1 130px", gap: 4 }}>
               <span className="muted" style={{ fontSize: 13 }}>Date</span>
               <input
                 name={`${prefix}_date_${i}`}
@@ -92,7 +92,7 @@ function RowGroup({
                 value={row.line_date}
               />
             </label>
-            <label className="grid" style={{ gap: 4, gridColumn: "span 2" }}>
+            <label className="grid" style={{ flex: "4 1 240px", gap: 4 }}>
               <span className="muted" style={{ fontSize: 13 }}>Description</span>
               <input
                 list={descriptionListId}
@@ -104,7 +104,7 @@ function RowGroup({
                 value={row.description}
               />
             </label>
-            <label className="grid" style={{ gap: 4 }}>
+            <label className="grid" style={{ flex: "0 1 70px", gap: 4 }}>
               <span className="muted" style={{ fontSize: 13 }}>Hours</span>
               <input
                 name={`${prefix}_qty_${i}`}
@@ -115,7 +115,7 @@ function RowGroup({
                 value={row.qty}
               />
             </label>
-            <label className="grid" style={{ gap: 4 }}>
+            <label className="grid" style={{ flex: "0 1 85px", gap: 4 }}>
               <span className="muted" style={{ fontSize: 13 }}>Rate</span>
               <input
                 name={`${prefix}_price_${i}`}
@@ -127,7 +127,7 @@ function RowGroup({
                 value={row.price}
               />
             </label>
-            <div className="grid" style={{ gap: 4 }}>
+            <div className="grid" style={{ flex: "0 1 90px", gap: 4 }}>
               <span className="muted" style={{ fontSize: 13 }}>Total</span>
               <div style={{ ...inputStyle, background: "var(--accent-soft)", fontWeight: 700 }}>
                 {money(rowTotal(row))}
