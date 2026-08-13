@@ -2,7 +2,15 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
-import { addPreset, deleteAgency, deletePreset, updatePreset } from "./actions";
+import {
+  addContact,
+  addPreset,
+  deleteAgency,
+  deleteContact,
+  deletePreset,
+  updateContact,
+  updatePreset,
+} from "./actions";
 import { DeleteAgencyForm } from "./DangerActions";
 
 type AgencyDetailPageProps = {
@@ -12,6 +20,13 @@ type AgencyDetailPageProps = {
 type Preset = {
   id: string;
   description: string;
+};
+
+type Contact = {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
 };
 
 export default async function AgencyDetailPage({ params }: AgencyDetailPageProps) {
@@ -26,7 +41,7 @@ export default async function AgencyDetailPage({ params }: AgencyDetailPageProps
     redirect("/login");
   }
 
-  const [{ data: agency }, { data: presets }] = await Promise.all([
+  const [{ data: agency }, { data: presets }, { data: contacts }] = await Promise.all([
     supabase.from("agencies").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("agency_line_item_presets")
@@ -35,6 +50,13 @@ export default async function AgencyDetailPage({ params }: AgencyDetailPageProps
       .order("sort_order")
       .order("created_at")
       .returns<Preset[]>(),
+    supabase
+      .from("agency_contacts")
+      .select("id, name, phone, email")
+      .eq("agency_id", id)
+      .order("sort_order")
+      .order("created_at")
+      .returns<Contact[]>(),
   ]);
 
   if (!agency) {
@@ -131,6 +153,76 @@ export default async function AgencyDetailPage({ params }: AgencyDetailPageProps
             />
             <button className="button" style={{ flexShrink: 0 }} type="submit">
               + Add description
+            </button>
+          </form>
+        </section>
+
+        <section className="card" style={{ display: "grid", gap: 14, marginBottom: 20, padding: 24 }}>
+          <h2 style={{ margin: 0 }}>Contacts</h2>
+          <p className="muted" style={{ margin: 0 }}>
+            People at {agency.name} — name, phone, and an optional email. Edit directly and save, or
+            remove with the trash icon.
+          </p>
+
+          {!contacts?.length ? (
+            <p className="muted" style={{ margin: 0 }}>No contacts added yet.</p>
+          ) : (
+            <div style={{ display: "grid", gap: 8 }}>
+              {contacts.map((contact) => (
+                <form
+                  action={updateContact}
+                  key={contact.id}
+                  style={{
+                    alignItems: "center",
+                    display: "grid",
+                    gap: 8,
+                    gridTemplateColumns: "2fr 1.3fr 1.5fr auto auto",
+                  }}
+                >
+                  <input name="contact_id" type="hidden" value={contact.id} />
+                  <input name="agency_id" type="hidden" value={id} />
+                  <input defaultValue={contact.name} name="name" placeholder="Name" style={inputStyle} type="text" />
+                  <input
+                    defaultValue={contact.phone || ""}
+                    name="phone"
+                    placeholder="Phone"
+                    style={inputStyle}
+                    type="tel"
+                  />
+                  <input
+                    defaultValue={contact.email || ""}
+                    name="email"
+                    placeholder="Email (optional)"
+                    style={inputStyle}
+                    type="email"
+                  />
+                  <button className="button secondary" style={{ padding: "10px 14px" }} type="submit">
+                    Save
+                  </button>
+                  <button
+                    aria-label="Delete contact"
+                    className="button secondary"
+                    formAction={deleteContact}
+                    style={{ color: "var(--danger)", flexShrink: 0, padding: 10 }}
+                    type="submit"
+                  >
+                    <TrashIcon />
+                  </button>
+                </form>
+              ))}
+            </div>
+          )}
+
+          <form
+            action={addContact}
+            style={{ alignItems: "center", display: "grid", gap: 8, gridTemplateColumns: "2fr 1.3fr 1.5fr auto" }}
+          >
+            <input name="agency_id" type="hidden" value={id} />
+            <input name="name" placeholder="Name" required style={inputStyle} type="text" />
+            <input name="phone" placeholder="Phone" style={inputStyle} type="tel" />
+            <input name="email" placeholder="Email (optional)" style={inputStyle} type="email" />
+            <button className="button" style={{ flexShrink: 0 }} type="submit">
+              + Add contact
             </button>
           </form>
         </section>

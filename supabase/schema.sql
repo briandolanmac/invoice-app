@@ -252,6 +252,34 @@ create trigger agency_line_item_presets_set_updated_at
 before update on public.agency_line_item_presets
 for each row execute function public.set_updated_at();
 
+-- Multiple named contacts per agency (name + phone, optional email),
+-- added 2026-08-13 -- separate from the single legacy contact_name/
+-- contact_email fields already on agencies.
+create table if not exists public.agency_contacts (
+  id uuid primary key default gen_random_uuid(),
+  agency_id uuid not null references public.agencies(id) on delete cascade,
+  name text not null,
+  phone text,
+  email text,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.agency_contacts enable row level security;
+
+drop policy if exists "Authenticated users can manage agency contacts" on public.agency_contacts;
+create policy "Authenticated users can manage agency contacts"
+  on public.agency_contacts for all
+  to authenticated
+  using (true)
+  with check (true);
+
+drop trigger if exists agency_contacts_set_updated_at on public.agency_contacts;
+create trigger agency_contacts_set_updated_at
+before update on public.agency_contacts
+for each row execute function public.set_updated_at();
+
 insert into public.agencies (name, customer_code, billing_address, payment_terms, default_invoice_prefix)
 values
   ('JTB USA Inc.', 'JTB', '3625 Del Amo Blvd., Ste 260, Torrance, CA 90503', 'Due on receipt', 'RD'),

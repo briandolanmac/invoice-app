@@ -12,8 +12,7 @@ export default async function LoginPage({
   return (
     <main className="page" style={{ display: "grid", placeItems: "center" }}>
       <section className="card" style={{ maxWidth: 440, padding: 28, width: "100%" }}>
-        <p className="muted" style={{ margin: 0 }}>Rie Dolan</p>
-        <h1 style={{ fontSize: 34, margin: "8px 0 10px" }}>Tour Invoices</h1>
+        <h1 style={{ fontSize: 34, margin: "0 0 10px" }}>Invoice App</h1>
         <p className="muted" style={{ lineHeight: 1.5, marginBottom: 28 }}>
           Sign in to create, copy, and download invoices.
         </p>

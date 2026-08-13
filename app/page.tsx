@@ -48,8 +48,7 @@ export default async function HomePage() {
           }}
         >
           <div>
-            <p className="muted" style={{ margin: 0 }}>Rie Dolan</p>
-            <h1 style={{ fontSize: 38, margin: "6px 0 0" }}>Tour Invoices</h1>
+            <h1 style={{ fontSize: 38, margin: 0 }}>Invoice App</h1>
             {usingDevSession ? (
               <p className="muted" style={{ margin: "8px 0 0" }}>
                 Local dev mode is on. Supabase login is bypassed on this Mac only.

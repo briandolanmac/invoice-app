@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import HomeButton from "./HomeButton";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Tour Invoices",
+  title: "Invoice App",
   description: "Create and manage tour-guide invoices.",
 };
 
@@ -13,7 +14,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <HomeButton />
+      </body>
     </html>
   );
 }
