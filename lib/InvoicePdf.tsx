@@ -27,8 +27,8 @@ export type PdfInvoiceData = {
   expenseItems: PdfLineItem[];
 };
 
-const ACCENT = "#d6336c";
-const ACCENT_DARK = "#a61e4d";
+const ACCENT = "#ec4899";
+const ACCENT_DARK = "#be185d";
 const MUTED = "#9d5c7c";
 const BORDER = "#f0c9dc";
 

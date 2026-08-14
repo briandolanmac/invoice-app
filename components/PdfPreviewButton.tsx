@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import PdfCanvasViewer from "./PdfCanvasViewer";
 
-/** Reusable "view a PDF in a popup" button + modal. Renders the PDF inline
- *  via an iframe over an object URL -- never opens a new tab/window.
- *  `loadPdf` is called fresh each time the popup opens, so callers can
- *  either fetch a saved file or generate one on the fly from live data. */
+/** Reusable "view a PDF in a popup" button + modal. Renders the PDF via
+ *  pdf.js onto <canvas> instead of an <iframe> -- iOS Safari doesn't
+ *  reliably render PDFs embedded in iframes, but canvas rendering works
+ *  the same everywhere. Never opens a new tab/window. `loadPdf` is called
+ *  fresh each time the popup opens, so callers can either fetch a saved
+ *  file or generate one on the fly from live data. */
 export default function PdfPreviewButton({
   agencyEmail,
   buttonClassName = "button secondary",
@@ -24,8 +27,9 @@ export default function PdfPreviewButton({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [blob, setBlob] = useState<Blob | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const printFrameRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -41,9 +45,9 @@ export default function PdfPreviewButton({
     setLoading(true);
     setError(null);
     try {
-      const blob = await loadPdf();
-      const url = URL.createObjectURL(blob);
-      setPdfUrl(url);
+      const pdfBlob = await loadPdf();
+      setBlob(pdfBlob);
+      setPdfUrl(URL.createObjectURL(pdfBlob));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not generate PDF");
     } finally {
@@ -53,6 +57,7 @@ export default function PdfPreviewButton({
 
   function handleClose() {
     setOpen(false);
+    setBlob(null);
     setPdfUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev);
       return null;
@@ -61,7 +66,7 @@ export default function PdfPreviewButton({
   }
 
   function handlePrint() {
-    iframeRef.current?.contentWindow?.print();
+    printFrameRef.current?.contentWindow?.print();
   }
 
   return (
@@ -178,16 +183,20 @@ export default function PdfPreviewButton({
                 >
                   {error}
                 </div>
-              ) : pdfUrl ? (
-                <iframe
-                  ref={iframeRef}
-                  src={pdfUrl}
-                  style={{ border: 0, height: "100%", width: "100%" }}
-                  title="Invoice PDF preview"
-                />
+              ) : blob ? (
+                <PdfCanvasViewer blob={blob} />
               ) : null}
             </div>
           </div>
+          {pdfUrl ? (
+            <iframe
+              ref={printFrameRef}
+              src={pdfUrl}
+              style={{ border: 0, height: 0, position: "absolute", width: 0 }}
+              tabIndex={-1}
+              title="Invoice PDF (print)"
+            />
+          ) : null}
         </div>
       ) : null}
     </>

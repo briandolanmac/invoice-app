@@ -46,6 +46,19 @@ textarea {
   width: 100%;
 }
 
+/* iOS Safari specifically: <input type="date"> lays out its calendar
+   icon + segmented mm/dd/yyyy fields using its own internal (WebKit)
+   sizing logic, which can ignore the box's CSS width in a narrow
+   container and paint past its edge -- width:100% above is not
+   sufficient on its own to stop that on a real device. Dropping the
+   native appearance makes it lay out like a plain text box instead;
+   tapping still opens the native date picker since that's driven by
+   type="date", not by this styling. */
+input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 .page {
   min-height: 100vh;
   padding: 24px;
