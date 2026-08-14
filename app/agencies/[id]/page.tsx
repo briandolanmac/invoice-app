@@ -109,39 +109,35 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
               None configured yet — no dropdown will appear for this agency until you add one below.
             </p>
           ) : (
-            <>
-              <form action={updatePresets} id="presets-form">
-                <input name="agency_id" type="hidden" value={id} />
-              </form>
+            <form action={updatePresets} style={{ display: "grid", gap: 8 }}>
+              <input name="agency_id" type="hidden" value={id} />
               <div style={{ display: "grid", gap: 8 }}>
                 {presets.map((preset) => (
                   <div key={preset.id} style={{ alignItems: "center", display: "flex", gap: 8 }}>
                     <input
                       defaultValue={preset.description}
-                      form="presets-form"
                       name={`description__${preset.id}`}
                       style={{ ...inputStyle, flex: 1 }}
                       type="text"
                     />
-                    <form action={deletePreset} style={{ display: "contents" }}>
-                      <input name="preset_id" type="hidden" value={preset.id} />
-                      <input name="agency_id" type="hidden" value={id} />
-                      <button
-                        aria-label="Delete description"
-                        className="button secondary"
-                        style={{ color: "var(--danger)", flexShrink: 0, padding: 10 }}
-                        type="submit"
-                      >
-                        <TrashIcon />
-                      </button>
-                    </form>
+                    <button
+                      aria-label="Delete description"
+                      className="button secondary"
+                      formAction={deletePreset}
+                      name="preset_id"
+                      style={{ color: "var(--danger)", flexShrink: 0, padding: 10 }}
+                      type="submit"
+                      value={preset.id}
+                    >
+                      <TrashIcon />
+                    </button>
                   </div>
                 ))}
               </div>
-              <button className="button secondary" form="presets-form" style={{ justifySelf: "start" }} type="submit">
+              <button className="button secondary" style={{ justifySelf: "start" }} type="submit">
                 Save changes
               </button>
-            </>
+            </form>
           )}
 
           <form action={addPreset} style={{ display: "grid", gap: 8 }}>
@@ -169,10 +165,8 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
           {!contacts?.length ? (
             <p className="muted" style={{ margin: 0 }}>No contacts added yet.</p>
           ) : (
-            <>
-              <form action={updateContacts} id="contacts-form">
-                <input name="agency_id" type="hidden" value={id} />
-              </form>
+            <form action={updateContacts} style={{ display: "grid", gap: 8 }}>
+              <input name="agency_id" type="hidden" value={id} />
               <div style={{ display: "grid", gap: 8 }}>
                 {contacts.map((contact) => (
                   <div
@@ -189,7 +183,6 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
                   >
                     <input
                       defaultValue={contact.name}
-                      form="contacts-form"
                       name={`name__${contact.id}`}
                       placeholder="Name"
                       style={{ ...inputStyle, flex: "2 1 160px", minWidth: 0 }}
@@ -197,7 +190,6 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
                     />
                     <input
                       defaultValue={contact.phone || ""}
-                      form="contacts-form"
                       name={`phone__${contact.id}`}
                       placeholder="Phone"
                       style={{ ...inputStyle, flex: "1 1 130px", minWidth: 0 }}
@@ -205,31 +197,29 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
                     />
                     <input
                       defaultValue={contact.email || ""}
-                      form="contacts-form"
                       name={`email__${contact.id}`}
                       placeholder="Email (optional)"
                       style={{ ...inputStyle, flex: "2 1 160px", minWidth: 0 }}
                       type="email"
                     />
-                    <form action={deleteContact} style={{ display: "contents" }}>
-                      <input name="contact_id" type="hidden" value={contact.id} />
-                      <input name="agency_id" type="hidden" value={id} />
-                      <button
-                        aria-label="Delete contact"
-                        className="button secondary"
-                        style={{ color: "var(--danger)", flexShrink: 0, padding: 10 }}
-                        type="submit"
-                      >
-                        <TrashIcon />
-                      </button>
-                    </form>
+                    <button
+                      aria-label="Delete contact"
+                      className="button secondary"
+                      formAction={deleteContact}
+                      name="contact_id"
+                      style={{ color: "var(--danger)", flexShrink: 0, padding: 10 }}
+                      type="submit"
+                      value={contact.id}
+                    >
+                      <TrashIcon />
+                    </button>
                   </div>
                 ))}
               </div>
-              <button className="button secondary" form="contacts-form" style={{ justifySelf: "start" }} type="submit">
+              <button className="button secondary" style={{ justifySelf: "start" }} type="submit">
                 Save changes
               </button>
-            </>
+            </form>
           )}
 
           <form
