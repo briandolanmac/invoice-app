@@ -3,12 +3,14 @@ import { redirect } from "next/navigation";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
 import SavedToast from "../../invoices/SavedToast";
+import PendingOverlay from "@/components/PendingOverlay";
 import {
   addContact,
   addPreset,
   deleteAgency,
   deleteContact,
   deletePreset,
+  updateAgencyDetails,
   updateContacts,
   updatePresets,
 } from "./actions";
@@ -137,6 +139,7 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
               <button className="button secondary" style={{ justifySelf: "start" }} type="submit">
                 Save changes
               </button>
+              <PendingOverlay />
             </form>
           )}
 
@@ -219,6 +222,7 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
               <button className="button secondary" style={{ justifySelf: "start" }} type="submit">
                 Save changes
               </button>
+              <PendingOverlay />
             </form>
           )}
 
@@ -252,11 +256,35 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
           </form>
         </section>
 
-        <section className="card" style={{ display: "grid", gap: 6, padding: 24 }}>
+        <section className="card" style={{ display: "grid", gap: 14, padding: 24 }}>
           <h2 style={{ margin: 0 }}>Details</h2>
-          <span className="muted">
-            {agency.payment_terms} · Invoice prefix {agency.default_invoice_prefix}
-          </span>
+          <form action={updateAgencyDetails} style={{ display: "grid", gap: 14 }}>
+            <input name="agency_id" type="hidden" value={id} />
+            <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
+              <label className="grid" style={{ gap: 6 }}>
+                <span>Payment terms</span>
+                <input
+                  defaultValue={agency.payment_terms || ""}
+                  name="payment_terms"
+                  style={inputStyle}
+                  type="text"
+                />
+              </label>
+              <label className="grid" style={{ gap: 6 }}>
+                <span>Invoice prefix</span>
+                <input
+                  defaultValue={agency.default_invoice_prefix || ""}
+                  name="default_invoice_prefix"
+                  style={inputStyle}
+                  type="text"
+                />
+              </label>
+            </div>
+            <button className="button secondary" style={{ justifySelf: "start" }} type="submit">
+              Save changes
+            </button>
+            <PendingOverlay />
+          </form>
         </section>
       </div>
     </main>

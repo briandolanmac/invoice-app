@@ -98,6 +98,21 @@ export async function deleteContact(formData: FormData) {
   revalidatePath(`/agencies/${agencyId}`);
 }
 
+export async function updateAgencyDetails(formData: FormData) {
+  const agencyId = String(formData.get("agency_id") || "");
+  if (!agencyId) return;
+
+  const supabase = await createClient();
+  await supabase
+    .from("agencies")
+    .update({
+      default_invoice_prefix: String(formData.get("default_invoice_prefix") || "").trim() || null,
+      payment_terms: String(formData.get("payment_terms") || "").trim() || null,
+    })
+    .eq("id", agencyId);
+  redirect(`/agencies/${agencyId}?saved=1`);
+}
+
 export async function deleteAgency(formData: FormData) {
   const agencyId = String(formData.get("agency_id") || "");
   const supabase = await createClient();
