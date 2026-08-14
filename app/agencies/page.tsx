@@ -42,7 +42,7 @@ export default async function AgenciesPage({
     <main className="page">
       <div className="shell">
         <header style={{ marginBottom: 24 }}>
-          <Link className="muted" href="/" style={{ textDecoration: "none" }}>← Home</Link>
+          <Link className="button secondary" href="/">← Home</Link>
           <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>Agencies</h1>
           <p className="muted" style={{ margin: "6px 0 0" }}>
             Reusable travel agency details for invoices.

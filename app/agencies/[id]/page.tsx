@@ -66,7 +66,7 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
     return (
       <main className="page">
         <div className="shell">
-          <Link className="muted" href="/agencies" style={{ textDecoration: "none" }}>← Agencies</Link>
+          <Link className="button secondary" href="/agencies">← Agencies</Link>
           <section className="card" style={{ marginTop: 16, padding: 24 }}>
             <p className="muted" style={{ margin: 0 }}>No agency found with that ID.</p>
           </section>
@@ -90,7 +90,7 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
           }}
         >
           <div>
-            <Link className="muted" href="/agencies" style={{ textDecoration: "none" }}>← Agencies</Link>
+            <Link className="button secondary" href="/agencies">← Agencies</Link>
             <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>{agency.name}</h1>
             {agency.billing_address ? (
               <p className="muted" style={{ margin: "6px 0 0", whiteSpace: "pre-line" }}>

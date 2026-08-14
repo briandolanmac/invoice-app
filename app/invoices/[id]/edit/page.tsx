@@ -54,7 +54,7 @@ export default async function EditInvoicePage({ params, searchParams }: EditInvo
     return (
       <main className="page">
         <div className="shell">
-          <Link className="muted" href="/invoices" style={{ textDecoration: "none" }}>← Invoices</Link>
+          <Link className="button secondary" href="/invoices">← Invoices</Link>
           <section className="card" style={{ marginTop: 16, padding: 24 }}>
             <p className="muted" style={{ margin: 0 }}>No invoice found with that ID.</p>
           </section>
@@ -95,7 +95,7 @@ export default async function EditInvoicePage({ params, searchParams }: EditInvo
     <main className="page">
       <div className="shell">
         <header style={{ marginBottom: 24 }}>
-          <Link className="muted" href={`/invoices/${id}`} style={{ textDecoration: "none" }}>
+          <Link className="button secondary" href={`/invoices/${id}`}>
             ← {invoice.invoice_number}
           </Link>
           <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>Edit invoice</h1>

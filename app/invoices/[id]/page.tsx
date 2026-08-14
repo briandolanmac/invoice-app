@@ -72,7 +72,7 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
     return (
       <main className="page">
         <div className="shell">
-          <Link className="muted" href="/invoices" style={{ textDecoration: "none" }}>← Invoices</Link>
+          <Link className="button secondary" href="/invoices">← Invoices</Link>
           <section className="card" style={{ marginTop: 16, padding: 24 }}>
             <p className="muted" style={{ margin: 0 }}>No invoice found with that ID.</p>
           </section>
@@ -124,7 +124,7 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
           }}
         >
           <div>
-            <Link className="muted" href="/invoices" style={{ textDecoration: "none" }}>← Invoices</Link>
+            <Link className="button secondary" href="/invoices">← Invoices</Link>
             <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>{agency?.name || "No agency"}</h1>
             <p className="muted" style={{ margin: "6px 0 0" }}>
               {invoice.invoice_number} · {invoice.invoice_date}

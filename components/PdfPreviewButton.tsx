@@ -10,11 +10,13 @@ import PdfCanvasViewer from "./PdfCanvasViewer";
  *  fresh each time the popup opens, so callers can either fetch a saved
  *  file or generate one on the fly from live data. */
 export default function PdfPreviewButton({
+  allowShare = false,
   buttonClassName = "button secondary",
   buttonLabel = "Preview PDF",
   fileName,
   loadPdf,
 }: {
+  allowShare?: boolean;
   buttonClassName?: string;
   buttonLabel?: string;
   fileName: string;
@@ -23,9 +25,21 @@ export default function PdfPreviewButton({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [shareError, setShareError] = useState<string | null>(null);
   const [blob, setBlob] = useState<Blob | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [canShareFiles, setCanShareFiles] = useState(false);
   const printFrameRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !navigator.canShare) return;
+    try {
+      const probe = new File([], "probe.pdf", { type: "application/pdf" });
+      setCanShareFiles(navigator.canShare({ files: [probe] }));
+    } catch {
+      setCanShareFiles(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -40,6 +54,7 @@ export default function PdfPreviewButton({
     setOpen(true);
     setLoading(true);
     setError(null);
+    setShareError(null);
     try {
       const pdfBlob = await loadPdf();
       setBlob(pdfBlob);
@@ -63,6 +78,24 @@ export default function PdfPreviewButton({
 
   function handlePrint() {
     printFrameRef.current?.contentWindow?.print();
+  }
+
+  /** Only ever shown when the OS can actually attach the file (Web Share
+   *  API with file support -- iOS/Android, most mobile browsers): opens
+   *  the native share sheet (Mail, Messages, AirDrop, etc.) with the real
+   *  PDF attached. There's deliberately no mailto: fallback here -- that
+   *  can only ever prefill a subject line, never attach a file, and
+   *  showing a button that looks like it should attach but doesn't is
+   *  worse than not showing one at all. */
+  async function handleShare() {
+    if (!blob) return;
+    const file = new File([blob], fileName, { type: "application/pdf" });
+    try {
+      await navigator.share({ files: [file], title: fileName });
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") return;
+      setShareError(err instanceof Error ? err.message : "Could not share PDF");
+    }
   }
 
   return (
@@ -95,6 +128,16 @@ export default function PdfPreviewButton({
                     >
                       Print
                     </button>
+                    {allowShare && canShareFiles ? (
+                      <button
+                        className="button secondary"
+                        onClick={handleShare}
+                        style={{ padding: "8px 14px" }}
+                        type="button"
+                      >
+                        Share
+                      </button>
+                    ) : null}
                   </>
                 ) : null}
                 <button
@@ -136,6 +179,24 @@ export default function PdfPreviewButton({
                 </div>
               ) : blob ? (
                 <PdfCanvasViewer blob={blob} />
+              ) : null}
+              {shareError ? (
+                <div
+                  style={{
+                    background: "var(--card)",
+                    borderTop: "1px solid var(--border)",
+                    bottom: 0,
+                    color: "var(--danger)",
+                    fontSize: 13,
+                    left: 0,
+                    padding: "8px 16px",
+                    position: "absolute",
+                    right: 0,
+                    textAlign: "center",
+                  }}
+                >
+                  {shareError}
+                </div>
               ) : null}
             </div>
           </div>

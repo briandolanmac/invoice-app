@@ -60,7 +60,7 @@ export default async function InvoicesPage({
           }}
         >
           <div>
-            <Link className="muted" href="/" style={{ textDecoration: "none" }}>← Home</Link>
+            <Link className="button secondary" href="/">← Home</Link>
             <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>Invoices</h1>
           </div>
           <Link className="button" href="/invoices/new">New invoice</Link>
