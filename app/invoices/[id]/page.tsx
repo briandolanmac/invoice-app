@@ -3,9 +3,10 @@ import { redirect } from "next/navigation";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
 import SavedToast from "../SavedToast";
-import { copyInvoice, deleteInvoice } from "./actions";
+import { copyInvoice, deleteInvoice, updateInvoiceStatus } from "./actions";
 import { DeleteInvoiceForm } from "./DangerActions";
 import InvoiceDetailPdfButton from "./InvoiceDetailPdfButton";
+import InvoiceStatusSelect from "./InvoiceStatusSelect";
 
 type InvoiceDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -29,13 +30,6 @@ type InvoiceFile = {
   storage_path: string;
   file_name: string;
   file_role: string;
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  draft: "#667085",
-  paid: "#0f766e",
-  sent: "#b58a00",
-  void: "#b42318",
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -150,7 +144,6 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
               <input name="invoice_id" type="hidden" value={id} />
               <button className="button secondary" type="submit">Copy as new</button>
             </form>
-            <DeleteInvoiceForm action={deleteInvoice} invoiceId={id} />
           </div>
         </header>
 
@@ -161,14 +154,7 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
           <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
             <div>
               <p className="muted" style={{ margin: 0 }}>Status</p>
-              <strong
-                style={{
-                  color: STATUS_COLORS[invoice.status] || "var(--ink)",
-                  textTransform: "capitalize",
-                }}
-              >
-                {invoice.status}
-              </strong>
+              <InvoiceStatusSelect action={updateInvoiceStatus} invoiceId={id} status={invoice.status} />
             </div>
             <div>
               <p className="muted" style={{ margin: 0 }}>Due date</p>
@@ -278,6 +264,14 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
               ))}
             </div>
           )}
+        </section>
+
+        <section className="card" style={{ marginTop: 20, padding: 24 }}>
+          <h2 style={{ marginTop: 0 }}>Danger zone</h2>
+          <p className="muted" style={{ margin: "0 0 12px" }}>
+            Permanently delete this invoice. This can&apos;t be undone.
+          </p>
+          <DeleteInvoiceForm action={deleteInvoice} invoiceId={id} />
         </section>
       </div>
     </main>

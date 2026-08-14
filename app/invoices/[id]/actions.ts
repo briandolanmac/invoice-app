@@ -58,6 +58,16 @@ export async function copyInvoice(formData: FormData) {
   redirect(`/invoices/${copy.id}/edit`);
 }
 
+export async function updateInvoiceStatus(formData: FormData) {
+  const invoiceId = String(formData.get("invoice_id") || "");
+  const status = String(formData.get("status") || "");
+  if (!invoiceId || !status) return;
+
+  const supabase = await createClient();
+  await supabase.from("invoices").update({ status }).eq("id", invoiceId);
+  redirect(`/invoices/${invoiceId}?saved=1`);
+}
+
 export async function deleteInvoice(formData: FormData) {
   const invoiceId = String(formData.get("invoice_id") || "");
   const supabase = await createClient();
