@@ -73,6 +73,7 @@ export default async function HomePage() {
             <Link className="button" href="/invoices/new">New invoice</Link>
             <Link className="button secondary" href="/invoices">View invoices</Link>
             <Link className="button secondary" href="/agencies">Agencies</Link>
+            <Link className="button secondary" href="/reports">Reports</Link>
           </div>
         </section>
 
