@@ -5,12 +5,10 @@ import PdfPreviewButton from "@/components/PdfPreviewButton";
 /** "View PDF" for a saved invoice -- always renders from current DB data
  *  via the API route, so it can never show a stale copy. */
 export default function InvoiceDetailPdfButton({
-  agencyEmail,
   buttonClassName,
   fileName,
   invoiceId,
 }: {
-  agencyEmail: string | null;
   buttonClassName?: string;
   fileName: string;
   invoiceId: string;
@@ -23,12 +21,10 @@ export default function InvoiceDetailPdfButton({
 
   return (
     <PdfPreviewButton
-      agencyEmail={agencyEmail}
       buttonClassName={buttonClassName}
       buttonLabel="View PDF"
       fileName={fileName}
       loadPdf={loadPdf}
-      showEmail
     />
   );
 }

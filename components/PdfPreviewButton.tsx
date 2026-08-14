@@ -10,37 +10,22 @@ import PdfCanvasViewer from "./PdfCanvasViewer";
  *  fresh each time the popup opens, so callers can either fetch a saved
  *  file or generate one on the fly from live data. */
 export default function PdfPreviewButton({
-  agencyEmail,
   buttonClassName = "button secondary",
   buttonLabel = "Preview PDF",
   fileName,
   loadPdf,
-  showEmail = false,
 }: {
-  agencyEmail?: string | null;
   buttonClassName?: string;
   buttonLabel?: string;
   fileName: string;
   loadPdf: () => Promise<Blob>;
-  showEmail?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [blob, setBlob] = useState<Blob | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [canShareFiles, setCanShareFiles] = useState(false);
   const printFrameRef = useRef<HTMLIFrameElement>(null);
-
-  useEffect(() => {
-    if (typeof navigator === "undefined" || !navigator.canShare) return;
-    try {
-      const probe = new File([], "probe.pdf", { type: "application/pdf" });
-      setCanShareFiles(navigator.canShare({ files: [probe] }));
-    } catch {
-      setCanShareFiles(false);
-    }
-  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -80,23 +65,6 @@ export default function PdfPreviewButton({
     printFrameRef.current?.contentWindow?.print();
   }
 
-  /** mailto: can never attach a file -- that's a browser sandbox
-   *  restriction, not something fixable with different markup. Where the
-   *  OS supports it (iOS/Android, most mobile browsers), the Web Share
-   *  API opens the native share sheet (Mail, Messages, AirDrop, etc.)
-   *  with the actual PDF attached. Falls back to the old mailto-only
-   *  behavior on browsers that don't support sharing files. */
-  async function handleShare() {
-    if (!blob) return;
-    const file = new File([blob], fileName, { type: "application/pdf" });
-    try {
-      await navigator.share({ files: [file], title: fileName });
-    } catch (err) {
-      if (err instanceof Error && err.name === "AbortError") return;
-      window.location.href = `mailto:${agencyEmail || ""}?subject=${encodeURIComponent(fileName)}`;
-    }
-  }
-
   return (
     <>
       <button className={buttonClassName} onClick={handleOpen} type="button">
@@ -127,26 +95,6 @@ export default function PdfPreviewButton({
                     >
                       Print
                     </button>
-                    {showEmail && canShareFiles ? (
-                      <button
-                        className="button secondary"
-                        onClick={handleShare}
-                        style={{ padding: "8px 14px" }}
-                        type="button"
-                      >
-                        Share
-                      </button>
-                    ) : showEmail ? (
-                      <a
-                        className="button secondary"
-                        href={`mailto:${agencyEmail || ""}?subject=${encodeURIComponent(
-                          fileName
-                        )}`}
-                        style={{ padding: "8px 14px" }}
-                      >
-                        Email
-                      </a>
-                    ) : null}
                   </>
                 ) : null}
                 <button

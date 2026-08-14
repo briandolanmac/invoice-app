@@ -64,7 +64,7 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
 
   const { data: invoice } = await supabase
     .from("invoices")
-    .select("*, agencies(name, billing_address, contact_name, contact_email)")
+    .select("*, agencies(name, billing_address, contact_name)")
     .eq("id", id)
     .maybeSingle();
 
@@ -107,7 +107,6 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
   const agency = invoice.agencies as {
     name: string;
     billing_address: string | null;
-    contact_email: string | null;
   } | null;
 
   return (
@@ -135,7 +134,6 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
             <Link className="button secondary" href={`/invoices/${id}/edit`}>Edit</Link>
             <InvoiceDetailPdfButton
-              agencyEmail={agency?.contact_email || null}
               buttonClassName="button"
               fileName={`${invoice.invoice_number}.pdf`}
               invoiceId={id}
