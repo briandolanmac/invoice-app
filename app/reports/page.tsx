@@ -40,6 +40,17 @@ export default async function ReportsPage() {
 
   const totalRevenue = monthlyRevenue.reduce((sum, m) => sum + m.amount, 0);
 
+  const byYear = new Map<string, number>();
+  for (const m of monthlyRevenue) {
+    const year = m.month.slice(0, 4);
+    byYear.set(year, (byYear.get(year) || 0) + m.amount);
+  }
+  const yearlyRevenue = Array.from(byYear.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+
+  function formatMoney(amount: number) {
+    return `$${amount.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 })}`;
+  }
+
   return (
     <main className="page">
       <div className="shell">
@@ -56,11 +67,17 @@ export default async function ReportsPage() {
             </p>
           </div>
 
-          <div>
-            <p className="muted" style={{ margin: 0 }}>Total revenue</p>
-            <strong style={{ fontSize: 32 }}>
-              ${totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
-            </strong>
+          <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
+            <div>
+              <p className="muted" style={{ margin: 0 }}>Total revenue</p>
+              <strong style={{ fontSize: 32 }}>{formatMoney(totalRevenue)}</strong>
+            </div>
+            {yearlyRevenue.map(([year, amount]) => (
+              <div key={year}>
+                <p className="muted" style={{ margin: 0 }}>{year} revenue</p>
+                <strong style={{ fontSize: 32 }}>{formatMoney(amount)}</strong>
+              </div>
+            ))}
           </div>
 
           <RevenueBarChart data={monthlyRevenue} />
