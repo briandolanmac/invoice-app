@@ -135,3 +135,65 @@ input[type="number"] {
     padding: 16px;
   }
 }
+
+/* PDF popup: sized with dvh (not vh) so its height tracks the REAL visible
+   viewport. iOS Safari's `vh` is based on the layout viewport as if the
+   address bar were already hidden, which can be taller than what's
+   actually on screen while the bar is showing -- a vertically-centered
+   box sized with vh can then be taller than the real visible area and
+   get pushed off the top, with no way to reach content above the fold
+   (matches "toolbar hidden at the top in portrait, fine in landscape").
+   On narrow screens the popup goes edge-to-edge full-screen instead of a
+   centered card, which removes the centering math entirely. */
+.pdf-modal-overlay {
+  align-items: center;
+  background: rgb(58 31 46 / 55%);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 20px;
+  position: fixed;
+  z-index: 3000;
+}
+
+.pdf-modal-card {
+  background: var(--card);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  height: min(92dvh, 900px);
+  max-width: 820px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.pdf-modal-header {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 14px 18px;
+}
+
+@media (max-width: 700px) {
+  .pdf-modal-overlay {
+    padding: 0;
+  }
+
+  .pdf-modal-card {
+    border-radius: 0;
+    height: 100dvh;
+    max-width: none;
+  }
+
+  /* Full-bleed on mobile now reaches the notch/Dynamic Island and the
+     home-indicator area -- pad the toolbar out to the safe area so its
+     buttons aren't flush against (or under) either one. */
+  .pdf-modal-header {
+    padding-left: max(18px, env(safe-area-inset-left));
+    padding-right: max(18px, env(safe-area-inset-right));
+    padding-top: max(14px, env(safe-area-inset-top));
+  }
+}

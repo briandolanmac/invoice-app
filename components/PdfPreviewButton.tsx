@@ -29,7 +29,18 @@ export default function PdfPreviewButton({
   const [error, setError] = useState<string | null>(null);
   const [blob, setBlob] = useState<Blob | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [canShareFiles, setCanShareFiles] = useState(false);
   const printFrameRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !navigator.canShare) return;
+    try {
+      const probe = new File([], "probe.pdf", { type: "application/pdf" });
+      setCanShareFiles(navigator.canShare({ files: [probe] }));
+    } catch {
+      setCanShareFiles(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -69,6 +80,23 @@ export default function PdfPreviewButton({
     printFrameRef.current?.contentWindow?.print();
   }
 
+  /** mailto: can never attach a file -- that's a browser sandbox
+   *  restriction, not something fixable with different markup. Where the
+   *  OS supports it (iOS/Android, most mobile browsers), the Web Share
+   *  API opens the native share sheet (Mail, Messages, AirDrop, etc.)
+   *  with the actual PDF attached. Falls back to the old mailto-only
+   *  behavior on browsers that don't support sharing files. */
+  async function handleShare() {
+    if (!blob) return;
+    const file = new File([blob], fileName, { type: "application/pdf" });
+    try {
+      await navigator.share({ files: [file], title: fileName });
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") return;
+      window.location.href = `mailto:${agencyEmail || ""}?subject=${encodeURIComponent(fileName)}`;
+    }
+  }
+
   return (
     <>
       <button className={buttonClassName} onClick={handleOpen} type="button">
@@ -76,43 +104,9 @@ export default function PdfPreviewButton({
       </button>
 
       {open ? (
-        <div
-          onClick={handleClose}
-          style={{
-            alignItems: "center",
-            background: "rgb(58 31 46 / 55%)",
-            display: "flex",
-            inset: 0,
-            justifyContent: "center",
-            padding: 20,
-            position: "fixed",
-            zIndex: 3000,
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: "var(--card)",
-              borderRadius: 20,
-              display: "flex",
-              flexDirection: "column",
-              height: "min(92vh, 900px)",
-              maxWidth: 820,
-              overflow: "hidden",
-              width: "100%",
-            }}
-          >
-            <div
-              style={{
-                alignItems: "center",
-                borderBottom: "1px solid var(--border)",
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 10,
-                justifyContent: "space-between",
-                padding: "14px 18px",
-              }}
-            >
+        <div className="pdf-modal-overlay" onClick={handleClose}>
+          <div className="pdf-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="pdf-modal-header">
               <strong>Invoice PDF</strong>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {pdfUrl ? (
@@ -133,7 +127,16 @@ export default function PdfPreviewButton({
                     >
                       Print
                     </button>
-                    {showEmail ? (
+                    {showEmail && canShareFiles ? (
+                      <button
+                        className="button secondary"
+                        onClick={handleShare}
+                        style={{ padding: "8px 14px" }}
+                        type="button"
+                      >
+                        Share
+                      </button>
+                    ) : showEmail ? (
                       <a
                         className="button secondary"
                         href={`mailto:${agencyEmail || ""}?subject=${encodeURIComponent(
