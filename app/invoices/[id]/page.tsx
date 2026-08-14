@@ -1,15 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Suspense } from "react";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
 import SavedToast from "../SavedToast";
 import { copyInvoice, deleteInvoice } from "./actions";
 import { DeleteInvoiceForm } from "./DangerActions";
-import { generatePdf } from "./pdf-actions";
+import InvoiceDetailPdfButton from "./InvoiceDetailPdfButton";
 
 type InvoiceDetailPageProps = {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ saved?: string }>;
 };
 
 type LineItem = {
@@ -45,8 +45,9 @@ const TYPE_LABELS: Record<string, string> = {
   adjustment: "Adjustment",
 };
 
-export default async function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
+export default async function InvoiceDetailPage({ params, searchParams }: InvoiceDetailPageProps) {
   const { id } = await params;
+  const search = await searchParams;
   const usingDevSession = await hasDevSession();
   const supabase = await createClient();
   const {
@@ -109,13 +110,15 @@ export default async function InvoiceDetailPage({ params }: InvoiceDetailPagePro
     })
   );
 
-  const agency = invoice.agencies as { name: string; billing_address: string | null } | null;
+  const agency = invoice.agencies as {
+    name: string;
+    billing_address: string | null;
+    contact_email: string | null;
+  } | null;
 
   return (
     <main className="page">
-      <Suspense fallback={null}>
-        <SavedToast />
-      </Suspense>
+      <SavedToast initialSaved={search.saved === "1"} />
       <div className="shell">
         <header
           style={{
@@ -137,10 +140,12 @@ export default async function InvoiceDetailPage({ params }: InvoiceDetailPagePro
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
             <Link className="button secondary" href={`/invoices/${id}/edit`}>Edit</Link>
-            <form action={generatePdf}>
-              <input name="invoice_id" type="hidden" value={id} />
-              <button className="button" type="submit">Generate PDF</button>
-            </form>
+            <InvoiceDetailPdfButton
+              agencyEmail={agency?.contact_email || null}
+              buttonClassName="button"
+              fileName={`${invoice.invoice_number}.pdf`}
+              invoiceId={id}
+            />
             <form action={copyInvoice}>
               <input name="invoice_id" type="hidden" value={id} />
               <button className="button secondary" type="submit">Copy as new</button>

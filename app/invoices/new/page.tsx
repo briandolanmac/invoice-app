@@ -4,6 +4,7 @@ import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
 import { createInvoice } from "./actions";
 import InvoiceFormFields from "../InvoiceFormFields";
+import NewInvoicePreviewButton from "./NewInvoicePreviewButton";
 
 type AgencyOption = { id: string; name: string };
 type PresetRow = { agency_id: string; description: string };
@@ -68,7 +69,7 @@ export default async function NewInvoicePage({
             </p>
           </section>
         ) : (
-          <form action={createInvoice} className="grid" style={{ gap: 20 }}>
+          <form action={createInvoice} className="grid" id="new-invoice-form" style={{ gap: 20 }}>
             <InvoiceFormFields
               agencies={agencies}
               agencyPresets={agencyPresets}
@@ -87,9 +88,12 @@ export default async function NewInvoicePage({
               </label>
             </section>
 
-            <button className="button" style={{ justifySelf: "start" }} type="submit">
-              Save invoice
-            </button>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+              <button className="button" type="submit">
+                Save invoice
+              </button>
+              <NewInvoicePreviewButton formId="new-invoice-form" />
+            </div>
           </form>
         )}
       </div>

@@ -17,15 +17,21 @@ export async function addPreset(formData: FormData) {
   revalidatePath(`/agencies/${agencyId}`);
 }
 
-export async function updatePreset(formData: FormData) {
-  const id = String(formData.get("preset_id") || "");
+export async function updatePresets(formData: FormData) {
   const agencyId = String(formData.get("agency_id") || "");
-  const description = String(formData.get("description") || "").trim();
-  if (!id || !description) return;
+  if (!agencyId) return;
 
   const supabase = await createClient();
-  await supabase.from("agency_line_item_presets").update({ description }).eq("id", id);
-  revalidatePath(`/agencies/${agencyId}`);
+  const updates = [];
+  for (const [key, value] of formData.entries()) {
+    if (!key.startsWith("description__")) continue;
+    const id = key.slice("description__".length);
+    const description = String(value).trim();
+    if (!id || !description) continue;
+    updates.push(supabase.from("agency_line_item_presets").update({ description }).eq("id", id));
+  }
+  await Promise.all(updates);
+  redirect(`/agencies/${agencyId}?saved=1`);
 }
 
 export async function deletePreset(formData: FormData) {
@@ -53,22 +59,33 @@ export async function addContact(formData: FormData) {
   revalidatePath(`/agencies/${agencyId}`);
 }
 
-export async function updateContact(formData: FormData) {
-  const id = String(formData.get("contact_id") || "");
+export async function updateContacts(formData: FormData) {
   const agencyId = String(formData.get("agency_id") || "");
-  const name = String(formData.get("name") || "").trim();
-  if (!id || !name) return;
+  if (!agencyId) return;
 
   const supabase = await createClient();
-  await supabase
-    .from("agency_contacts")
-    .update({
-      name,
-      phone: String(formData.get("phone") || "").trim() || null,
-      email: String(formData.get("email") || "").trim() || null,
-    })
-    .eq("id", id);
-  revalidatePath(`/agencies/${agencyId}`);
+  const ids = new Set<string>();
+  for (const key of formData.keys()) {
+    const match = key.match(/^name__(.+)$/);
+    if (match) ids.add(match[1]);
+  }
+
+  const updates = Array.from(ids).flatMap((id) => {
+    const name = String(formData.get(`name__${id}`) || "").trim();
+    if (!name) return [];
+    return [
+      supabase
+        .from("agency_contacts")
+        .update({
+          name,
+          phone: String(formData.get(`phone__${id}`) || "").trim() || null,
+          email: String(formData.get(`email__${id}`) || "").trim() || null,
+        })
+        .eq("id", id),
+    ];
+  });
+  await Promise.all(updates);
+  redirect(`/agencies/${agencyId}?saved=1`);
 }
 
 export async function deleteContact(formData: FormData) {

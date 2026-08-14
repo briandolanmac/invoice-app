@@ -1,25 +1,23 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-/** Shows a brief "Saved" confirmation when the URL has ?saved=1, then
- *  clears itself and strips the param so it doesn't reappear on refresh. */
-export default function SavedToast() {
-  const searchParams = useSearchParams();
+/** Shows a brief "Saved" confirmation, then clears itself and strips
+ *  ?saved=1 from the URL. `initialSaved` is read server-side (the page
+ *  already has searchParams) and passed in as a plain prop -- avoids
+ *  useSearchParams()/Suspense entirely, so the toast is already known
+ *  to be visible on first paint instead of discovering it after mount. */
+export default function SavedToast({ initialSaved }: { initialSaved: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(initialSaved);
 
   useEffect(() => {
-    if (searchParams.get("saved") !== "1") return;
-    setVisible(true);
+    if (!initialSaved) return;
     const timer = setTimeout(() => {
       setVisible(false);
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete("saved");
-      const query = params.toString();
-      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      router.replace(pathname, { scroll: false });
     }, 2000);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps

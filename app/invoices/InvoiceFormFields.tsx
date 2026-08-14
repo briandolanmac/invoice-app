@@ -9,7 +9,9 @@ const inputStyle = {
   border: "1px solid var(--border)",
   borderRadius: 12,
   fontFamily: "inherit",
+  minWidth: 0,
   padding: "12px 14px",
+  width: "100%",
 };
 
 export default function InvoiceFormFields({

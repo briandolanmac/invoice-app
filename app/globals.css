@@ -33,6 +33,19 @@ textarea {
   font: inherit;
 }
 
+/* Global safety net: inputs never had an explicit width in several
+   places, so on narrow screens they fell back to their own intrinsic
+   size (most visible on <input type="date">, which has a wide native
+   layout) and overflowed their container instead of shrinking to fit.
+   min-width: 0 overrides the flex/grid item default of min-width:
+   auto, which otherwise refuses to shrink below content size. */
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  min-width: 0;
+  width: 100%;
+}
+
 .page {
   min-height: 100vh;
   padding: 24px;

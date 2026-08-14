@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Suspense } from "react";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
 import SavedToast from "./SavedToast";
@@ -23,7 +22,12 @@ const STATUS_COLORS: Record<string, string> = {
   void: "#b42318",
 };
 
-export default async function InvoicesPage() {
+export default async function InvoicesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ saved?: string }>;
+}) {
+  const params = await searchParams;
   const usingDevSession = await hasDevSession();
   const supabase = await createClient();
   const {
@@ -44,9 +48,7 @@ export default async function InvoicesPage() {
 
   return (
     <main className="page">
-      <Suspense fallback={null}>
-        <SavedToast />
-      </Suspense>
+      <SavedToast initialSaved={params.saved === "1"} />
       <div className="shell">
         <header
           style={{

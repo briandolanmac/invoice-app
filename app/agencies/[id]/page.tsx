@@ -2,19 +2,21 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
+import SavedToast from "../../invoices/SavedToast";
 import {
   addContact,
   addPreset,
   deleteAgency,
   deleteContact,
   deletePreset,
-  updateContact,
-  updatePreset,
+  updateContacts,
+  updatePresets,
 } from "./actions";
 import { DeleteAgencyForm } from "./DangerActions";
 
 type AgencyDetailPageProps = {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ saved?: string }>;
 };
 
 type Preset = {
@@ -29,8 +31,9 @@ type Contact = {
   email: string | null;
 };
 
-export default async function AgencyDetailPage({ params }: AgencyDetailPageProps) {
+export default async function AgencyDetailPage({ params, searchParams }: AgencyDetailPageProps) {
   const { id } = await params;
+  const search = await searchParams;
   const usingDevSession = await hasDevSession();
   const supabase = await createClient();
   const {
@@ -74,6 +77,7 @@ export default async function AgencyDetailPage({ params }: AgencyDetailPageProps
 
   return (
     <main className="page">
+      <SavedToast initialSaved={search.saved === "1"} />
       <div className="shell">
         <header
           style={{
@@ -105,36 +109,39 @@ export default async function AgencyDetailPage({ params }: AgencyDetailPageProps
               None configured yet — no dropdown will appear for this agency until you add one below.
             </p>
           ) : (
-            <div style={{ display: "grid", gap: 8 }}>
-              {presets.map((preset) => (
-                <form
-                  action={updatePreset}
-                  key={preset.id}
-                  style={{ alignItems: "center", display: "flex", gap: 8 }}
-                >
-                  <input name="preset_id" type="hidden" value={preset.id} />
-                  <input name="agency_id" type="hidden" value={id} />
-                  <input
-                    defaultValue={preset.description}
-                    name="description"
-                    style={{ ...inputStyle, flex: 1 }}
-                    type="text"
-                  />
-                  <button className="button secondary" style={{ padding: "10px 14px" }} type="submit">
-                    Save
-                  </button>
-                  <button
-                    aria-label="Delete description"
-                    className="button secondary"
-                    formAction={deletePreset}
-                    style={{ color: "var(--danger)", flexShrink: 0, padding: 10 }}
-                    type="submit"
-                  >
-                    <TrashIcon />
-                  </button>
-                </form>
-              ))}
-            </div>
+            <>
+              <form action={updatePresets} id="presets-form">
+                <input name="agency_id" type="hidden" value={id} />
+              </form>
+              <div style={{ display: "grid", gap: 8 }}>
+                {presets.map((preset) => (
+                  <div key={preset.id} style={{ alignItems: "center", display: "flex", gap: 8 }}>
+                    <input
+                      defaultValue={preset.description}
+                      form="presets-form"
+                      name={`description__${preset.id}`}
+                      style={{ ...inputStyle, flex: 1 }}
+                      type="text"
+                    />
+                    <form action={deletePreset} style={{ display: "contents" }}>
+                      <input name="preset_id" type="hidden" value={preset.id} />
+                      <input name="agency_id" type="hidden" value={id} />
+                      <button
+                        aria-label="Delete description"
+                        className="button secondary"
+                        style={{ color: "var(--danger)", flexShrink: 0, padding: 10 }}
+                        type="submit"
+                      >
+                        <TrashIcon />
+                      </button>
+                    </form>
+                  </div>
+                ))}
+              </div>
+              <button className="button secondary" form="presets-form" style={{ justifySelf: "start" }} type="submit">
+                Save changes
+              </button>
+            </>
           )}
 
           <form action={addPreset} style={{ display: "grid", gap: 8 }}>
@@ -162,61 +169,67 @@ export default async function AgencyDetailPage({ params }: AgencyDetailPageProps
           {!contacts?.length ? (
             <p className="muted" style={{ margin: 0 }}>No contacts added yet.</p>
           ) : (
-            <div style={{ display: "grid", gap: 8 }}>
-              {contacts.map((contact) => (
-                <form
-                  action={updateContact}
-                  key={contact.id}
-                  style={{
-                    alignItems: "center",
-                    border: "1px solid var(--border)",
-                    borderRadius: 14,
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: 8,
-                    padding: 10,
-                  }}
-                >
-                  <input name="contact_id" type="hidden" value={contact.id} />
-                  <input name="agency_id" type="hidden" value={id} />
-                  <input
-                    defaultValue={contact.name}
-                    name="name"
-                    placeholder="Name"
-                    style={{ ...inputStyle, flex: "2 1 160px", minWidth: 0 }}
-                    type="text"
-                  />
-                  <input
-                    defaultValue={contact.phone || ""}
-                    name="phone"
-                    placeholder="Phone"
-                    style={{ ...inputStyle, flex: "1 1 130px", minWidth: 0 }}
-                    type="tel"
-                  />
-                  <input
-                    defaultValue={contact.email || ""}
-                    name="email"
-                    placeholder="Email (optional)"
-                    style={{ ...inputStyle, flex: "2 1 160px", minWidth: 0 }}
-                    type="email"
-                  />
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button className="button secondary" style={{ padding: "10px 14px" }} type="submit">
-                      Save
-                    </button>
-                    <button
-                      aria-label="Delete contact"
-                      className="button secondary"
-                      formAction={deleteContact}
-                      style={{ color: "var(--danger)", flexShrink: 0, padding: 10 }}
-                      type="submit"
-                    >
-                      <TrashIcon />
-                    </button>
+            <>
+              <form action={updateContacts} id="contacts-form">
+                <input name="agency_id" type="hidden" value={id} />
+              </form>
+              <div style={{ display: "grid", gap: 8 }}>
+                {contacts.map((contact) => (
+                  <div
+                    key={contact.id}
+                    style={{
+                      alignItems: "center",
+                      border: "1px solid var(--border)",
+                      borderRadius: 14,
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 8,
+                      padding: 10,
+                    }}
+                  >
+                    <input
+                      defaultValue={contact.name}
+                      form="contacts-form"
+                      name={`name__${contact.id}`}
+                      placeholder="Name"
+                      style={{ ...inputStyle, flex: "2 1 160px", minWidth: 0 }}
+                      type="text"
+                    />
+                    <input
+                      defaultValue={contact.phone || ""}
+                      form="contacts-form"
+                      name={`phone__${contact.id}`}
+                      placeholder="Phone"
+                      style={{ ...inputStyle, flex: "1 1 130px", minWidth: 0 }}
+                      type="tel"
+                    />
+                    <input
+                      defaultValue={contact.email || ""}
+                      form="contacts-form"
+                      name={`email__${contact.id}`}
+                      placeholder="Email (optional)"
+                      style={{ ...inputStyle, flex: "2 1 160px", minWidth: 0 }}
+                      type="email"
+                    />
+                    <form action={deleteContact} style={{ display: "contents" }}>
+                      <input name="contact_id" type="hidden" value={contact.id} />
+                      <input name="agency_id" type="hidden" value={id} />
+                      <button
+                        aria-label="Delete contact"
+                        className="button secondary"
+                        style={{ color: "var(--danger)", flexShrink: 0, padding: 10 }}
+                        type="submit"
+                      >
+                        <TrashIcon />
+                      </button>
+                    </form>
                   </div>
-                </form>
-              ))}
-            </div>
+                ))}
+              </div>
+              <button className="button secondary" form="contacts-form" style={{ justifySelf: "start" }} type="submit">
+                Save changes
+              </button>
+            </>
           )}
 
           <form
