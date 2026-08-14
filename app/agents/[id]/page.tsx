@@ -68,9 +68,9 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
     return (
       <main className="page">
         <div className="shell">
-          <Link className="button secondary" href="/agencies">← Agencies</Link>
+          <Link className="button secondary" href="/agents">← Agents</Link>
           <section className="card" style={{ marginTop: 16, padding: 24 }}>
-            <p className="muted" style={{ margin: 0 }}>No agency found with that ID.</p>
+            <p className="muted" style={{ margin: 0 }}>No agent found with that ID.</p>
           </section>
         </div>
       </main>
@@ -92,7 +92,7 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
           }}
         >
           <div>
-            <Link className="button secondary" href="/agencies">← Agencies</Link>
+            <Link className="button secondary" href="/agents">← Agents</Link>
             <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>{agency.name}</h1>
             {agency.billing_address ? (
               <p className="muted" style={{ margin: "6px 0 0", whiteSpace: "pre-line" }}>
@@ -108,7 +108,7 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
 
           {!presets?.length ? (
             <p className="muted" style={{ margin: 0 }}>
-              None configured yet — no dropdown will appear for this agency until you add one below.
+              None configured yet — no dropdown will appear for this agent until you add one below.
             </p>
           ) : (
             <form action={updatePresets} style={{ display: "grid", gap: 8 }}>

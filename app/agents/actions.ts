@@ -8,7 +8,7 @@ export async function createAgency(formData: FormData) {
   const name = String(formData.get("name") || "").trim();
 
   if (!name) {
-    redirect("/agencies?error=Agency%20name%20is%20required");
+    redirect("/agents?error=Agent%20name%20is%20required");
   }
 
   const supabase = await createClient();
@@ -22,9 +22,9 @@ export async function createAgency(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/agencies?error=${encodeURIComponent(error.message)}`);
+    redirect(`/agents?error=${encodeURIComponent(error.message)}`);
   }
 
-  revalidatePath("/agencies");
-  redirect("/agencies");
+  revalidatePath("/agents");
+  redirect("/agents");
 }

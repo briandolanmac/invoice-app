@@ -13,7 +13,7 @@ export async function updateInvoice(formData: FormData) {
     redirect(`/invoices/${invoiceId}/edit?error=Invoice%20number%20is%20required`);
   }
   if (!agencyId) {
-    redirect(`/invoices/${invoiceId}/edit?error=Please%20choose%20an%20agency`);
+    redirect(`/invoices/${invoiceId}/edit?error=Please%20choose%20an%20agent`);
   }
 
   const rows = parseLineItems(formData);

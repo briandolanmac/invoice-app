@@ -14,7 +14,7 @@ export async function addPreset(formData: FormData) {
     agency_id: agencyId,
     description,
   });
-  revalidatePath(`/agencies/${agencyId}`);
+  revalidatePath(`/agents/${agencyId}`);
 }
 
 export async function updatePresets(formData: FormData) {
@@ -31,7 +31,7 @@ export async function updatePresets(formData: FormData) {
     updates.push(supabase.from("agency_line_item_presets").update({ description }).eq("id", id));
   }
   await Promise.all(updates);
-  redirect(`/agencies/${agencyId}?saved=1`);
+  redirect(`/agents/${agencyId}?saved=1`);
 }
 
 export async function deletePreset(formData: FormData) {
@@ -41,7 +41,7 @@ export async function deletePreset(formData: FormData) {
 
   const supabase = await createClient();
   await supabase.from("agency_line_item_presets").delete().eq("id", id);
-  revalidatePath(`/agencies/${agencyId}`);
+  revalidatePath(`/agents/${agencyId}`);
 }
 
 export async function addContact(formData: FormData) {
@@ -56,7 +56,7 @@ export async function addContact(formData: FormData) {
     phone: String(formData.get("phone") || "").trim() || null,
     email: String(formData.get("email") || "").trim() || null,
   });
-  revalidatePath(`/agencies/${agencyId}`);
+  revalidatePath(`/agents/${agencyId}`);
 }
 
 export async function updateContacts(formData: FormData) {
@@ -85,7 +85,7 @@ export async function updateContacts(formData: FormData) {
     ];
   });
   await Promise.all(updates);
-  redirect(`/agencies/${agencyId}?saved=1`);
+  redirect(`/agents/${agencyId}?saved=1`);
 }
 
 export async function deleteContact(formData: FormData) {
@@ -95,7 +95,7 @@ export async function deleteContact(formData: FormData) {
 
   const supabase = await createClient();
   await supabase.from("agency_contacts").delete().eq("id", id);
-  revalidatePath(`/agencies/${agencyId}`);
+  revalidatePath(`/agents/${agencyId}`);
 }
 
 export async function updateAgencyDetails(formData: FormData) {
@@ -110,12 +110,12 @@ export async function updateAgencyDetails(formData: FormData) {
       payment_terms: String(formData.get("payment_terms") || "").trim() || null,
     })
     .eq("id", agencyId);
-  redirect(`/agencies/${agencyId}?saved=1`);
+  redirect(`/agents/${agencyId}?saved=1`);
 }
 
 export async function deleteAgency(formData: FormData) {
   const agencyId = String(formData.get("agency_id") || "");
   const supabase = await createClient();
   await supabase.from("agencies").delete().eq("id", agencyId);
-  redirect("/agencies");
+  redirect("/agents");
 }

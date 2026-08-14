@@ -50,7 +50,7 @@ export default function InvoiceFormFields({
         <h2 style={{ margin: 0 }}>Details</h2>
         <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
           <label className="grid" style={{ gap: 6 }}>
-            <span>Agency</span>
+            <span>Agent</span>
             <select
               name="agency_id"
               onChange={(e) => setAgencyId(e.target.value)}
@@ -58,7 +58,7 @@ export default function InvoiceFormFields({
               style={inputStyle}
               value={agencyId}
             >
-              <option disabled value="">Select an agency</option>
+              <option disabled value="">Select an agent</option>
               {agencies.map((agency) => (
                 <option key={agency.id} value={agency.id}>{agency.name}</option>
               ))}

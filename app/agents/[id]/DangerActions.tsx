@@ -13,7 +13,7 @@ export function DeleteAgencyForm({
       onSubmit={(e) => {
         if (
           !confirm(
-            "Delete this agency permanently? This also removes its standard descriptions. Existing invoices keep their data but lose the agency link."
+            "Delete this agent permanently? This also removes its standard descriptions. Existing invoices keep their data but lose the agent link."
           )
         ) {
           e.preventDefault();
@@ -22,7 +22,7 @@ export function DeleteAgencyForm({
     >
       <input name="agency_id" type="hidden" value={agencyId} />
       <button className="button secondary" style={{ color: "var(--danger)" }} type="submit">
-        Delete agency
+        Delete agent
       </button>
     </form>
   );

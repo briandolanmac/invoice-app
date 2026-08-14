@@ -43,9 +43,9 @@ export default async function AgenciesPage({
       <div className="shell">
         <header style={{ marginBottom: 24 }}>
           <Link className="button secondary" href="/">← Home</Link>
-          <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>Agencies</h1>
+          <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>Agents</h1>
           <p className="muted" style={{ margin: "6px 0 0" }}>
-            Reusable travel agency details for invoices.
+            Reusable travel agent details for invoices.
           </p>
         </header>
 
@@ -56,14 +56,14 @@ export default async function AgenciesPage({
         ) : null}
 
         <section className="card" style={{ marginBottom: 20, padding: 24 }}>
-          <h2 style={{ marginTop: 0 }}>Existing agencies</h2>
+          <h2 style={{ marginTop: 0 }}>Existing agents</h2>
           {!agencies?.length ? (
-            <p className="muted">No agencies yet — add the first one below.</p>
+            <p className="muted">No agents yet — add the first one below.</p>
           ) : (
             <div style={{ display: "grid", gap: 12 }}>
               {agencies.map((agency) => (
                 <Link
-                  href={`/agencies/${agency.id}`}
+                  href={`/agents/${agency.id}`}
                   key={agency.id}
                   style={{
                     border: "1px solid var(--border)",
@@ -91,15 +91,15 @@ export default async function AgenciesPage({
         </section>
 
         <section className="card" style={{ padding: 24 }}>
-          <h2 style={{ marginTop: 0 }}>Add a new agency</h2>
+          <h2 style={{ marginTop: 0 }}>Add a new agent</h2>
           <form action={createAgency} className="grid" style={{ gap: 14 }}>
             <div style={{ display: "grid", gap: 14, gridTemplateColumns: "2fr 1fr" }}>
-              <Field label="Agency name" name="name" required />
+              <Field label="Agent name" name="name" required />
               <Field label="Customer code" name="customer_code" placeholder="e.g. JTB" />
             </div>
             <Field label="Billing address" name="billing_address" />
             <p className="muted" style={{ margin: 0 }}>
-              Add contacts (with phone numbers) after saving, from the agency&apos;s own page.
+              Add contacts (with phone numbers) after saving, from the agent&apos;s own page.
             </p>
             <div style={{ display: "grid", gap: 14, gridTemplateColumns: "1fr 1fr" }}>
               <Field label="Payment terms" name="payment_terms" placeholder="Due on receipt" />
@@ -107,7 +107,7 @@ export default async function AgenciesPage({
             </div>
             <Field label="Notes" name="notes" textarea />
             <button className="button" style={{ justifySelf: "start" }} type="submit">
-              Save agency
+              Save agent
             </button>
           </form>
         </section>

@@ -72,7 +72,7 @@ export default async function HomePage() {
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
             <Link className="button" href="/invoices/new">New invoice</Link>
             <Link className="button secondary" href="/invoices">View invoices</Link>
-            <Link className="button secondary" href="/agencies">Agencies</Link>
+            <Link className="button secondary" href="/agents">Agents</Link>
             <Link className="button secondary" href="/reports">Reports</Link>
           </div>
         </section>
@@ -96,7 +96,7 @@ export default async function HomePage() {
                     textDecoration: "none",
                   }}
                 >
-                  <strong style={{ fontSize: 18 }}>{invoice.agencies?.name || "No agency"}</strong>
+                  <strong style={{ fontSize: 18 }}>{invoice.agencies?.name || "No agent"}</strong>
                   <span className="muted">
                     {invoice.invoice_number} · {invoice.invoice_date} · {invoice.status}
                   </span>

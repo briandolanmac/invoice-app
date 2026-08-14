@@ -125,7 +125,7 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
         >
           <div>
             <Link className="button secondary" href="/invoices">← Invoices</Link>
-            <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>{agency?.name || "No agency"}</h1>
+            <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>{agency?.name || "No agent"}</h1>
             <p className="muted" style={{ margin: "6px 0 0" }}>
               {invoice.invoice_number} · {invoice.invoice_date}
               {invoice.tour_group_name ? ` · ${invoice.tour_group_name}` : ""}

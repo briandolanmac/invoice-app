@@ -10,13 +10,11 @@ import PdfCanvasViewer from "./PdfCanvasViewer";
  *  fresh each time the popup opens, so callers can either fetch a saved
  *  file or generate one on the fly from live data. */
 export default function PdfPreviewButton({
-  allowShare = false,
   buttonClassName = "button secondary",
   buttonLabel = "Preview PDF",
   fileName,
   loadPdf,
 }: {
-  allowShare?: boolean;
   buttonClassName?: string;
   buttonLabel?: string;
   fileName: string;
@@ -80,13 +78,13 @@ export default function PdfPreviewButton({
     printFrameRef.current?.contentWindow?.print();
   }
 
-  /** Only ever shown when the OS can actually attach the file (Web Share
-   *  API with file support -- iOS/Android, most mobile browsers): opens
-   *  the native share sheet (Mail, Messages, AirDrop, etc.) with the real
-   *  PDF attached. There's deliberately no mailto: fallback here -- that
-   *  can only ever prefill a subject line, never attach a file, and
-   *  showing a button that looks like it should attach but doesn't is
-   *  worse than not showing one at all. */
+  /** Replaces the plain "Download" link wherever the OS can actually
+   *  attach the file (Web Share API with file support -- iOS/Android,
+   *  most mobile browsers): opens the native share sheet (Save to Files,
+   *  Mail, Messages, AirDrop, etc.) with the real PDF attached. Needed
+   *  because <a download href="blob:..."> isn't reliably honored on iOS
+   *  Safari -- it can just navigate to the raw PDF instead of saving it,
+   *  stranding the user outside the app with no way back. */
   async function handleShare() {
     if (!blob) return;
     const file = new File([blob], fileName, { type: "application/pdf" });
@@ -112,23 +110,7 @@ export default function PdfPreviewButton({
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {pdfUrl ? (
                   <>
-                    <a
-                      className="button secondary"
-                      download={fileName}
-                      href={pdfUrl}
-                      style={{ padding: "8px 14px" }}
-                    >
-                      Download
-                    </a>
-                    <button
-                      className="button secondary"
-                      onClick={handlePrint}
-                      style={{ padding: "8px 14px" }}
-                      type="button"
-                    >
-                      Print
-                    </button>
-                    {allowShare && canShareFiles ? (
+                    {canShareFiles ? (
                       <button
                         className="button secondary"
                         onClick={handleShare}
@@ -138,6 +120,14 @@ export default function PdfPreviewButton({
                         Share
                       </button>
                     ) : null}
+                    <button
+                      className="button secondary"
+                      onClick={handlePrint}
+                      style={{ padding: "8px 14px" }}
+                      type="button"
+                    >
+                      Print
+                    </button>
                   </>
                 ) : null}
                 <button

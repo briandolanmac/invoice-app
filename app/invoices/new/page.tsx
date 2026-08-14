@@ -65,7 +65,7 @@ export default async function NewInvoicePage({
         {!agencies?.length ? (
           <section className="card" style={{ padding: 24 }}>
             <p className="muted" style={{ margin: 0 }}>
-              No agencies yet. <Link href="/agencies">Add one first</Link>, then come back here.
+              No agents yet. <Link href="/agents">Add one first</Link>, then come back here.
             </p>
           </section>
         ) : (

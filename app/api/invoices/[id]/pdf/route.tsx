@@ -49,7 +49,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       notes: invoice.notes,
       payment_instructions: invoice.payment_instructions,
     },
-    { name: agency?.name || "No agency", billing_address: agency?.billing_address || null },
+    { name: agency?.name || "No agent", billing_address: agency?.billing_address || null },
     rows
   );
 

@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       notes: String(formData.get("notes") || "").trim() || null,
       payment_instructions: String(formData.get("payment_instructions") || "").trim() || null,
     },
-    { name: agency?.name || "No agency", billing_address: agency?.billing_address || null },
+    { name: agency?.name || "No agent", billing_address: agency?.billing_address || null },
     rows
   );
 

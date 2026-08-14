@@ -12,7 +12,7 @@ export async function createInvoice(formData: FormData) {
     redirect("/invoices/new?error=Invoice%20number%20is%20required");
   }
   if (!agencyId) {
-    redirect("/invoices/new?error=Please%20choose%20an%20agency");
+    redirect("/invoices/new?error=Please%20choose%20an%20agent");
   }
 
   const rows = parseLineItems(formData);

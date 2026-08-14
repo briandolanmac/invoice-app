@@ -21,7 +21,6 @@ export default function InvoiceDetailPdfButton({
 
   return (
     <PdfPreviewButton
-      allowShare
       buttonClassName={buttonClassName}
       buttonLabel="View PDF"
       fileName={fileName}
