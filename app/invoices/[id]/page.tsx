@@ -3,8 +3,8 @@ import { redirect } from "next/navigation";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
 import SavedToast from "../SavedToast";
-import { copyInvoice, deleteInvoice, updateInvoiceStatus } from "./actions";
-import { DeleteInvoiceForm } from "./DangerActions";
+import { copyInvoice, deleteInvoice, deleteInvoiceFile, updateInvoiceStatus } from "./actions";
+import { DeleteFileForm, DeleteInvoiceForm } from "./DangerActions";
 import InvoiceDetailPdfButton from "./InvoiceDetailPdfButton";
 import InvoiceStatusSelect from "./InvoiceStatusSelect";
 
@@ -242,14 +242,39 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
                     justifyContent: "space-between",
                   }}
                 >
-                  <span>{file.file_name}</span>
                   {file.url ? (
-                    <a className="button secondary" href={file.url} target="_blank" rel="noreferrer">
-                      Download
+                    <a
+                      href={file.url}
+                      rel="noreferrer"
+                      style={{
+                        alignItems: "center",
+                        color: "inherit",
+                        display: "flex",
+                        gap: 10,
+                        minWidth: 0,
+                        textDecoration: "none",
+                      }}
+                      target="_blank"
+                    >
+                      <FileIcon />
+                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {file.file_name}
+                      </span>
                     </a>
                   ) : (
-                    <span className="muted">Unavailable</span>
+                    <span style={{ alignItems: "center", color: "var(--muted)", display: "flex", gap: 10 }}>
+                      <FileIcon />
+                      {file.file_name} (unavailable)
+                    </span>
                   )}
+                  <DeleteFileForm
+                    action={deleteInvoiceFile}
+                    fileId={file.id}
+                    fileName={file.file_name}
+                    invoiceId={id}
+                    storageBucket={file.storage_bucket}
+                    storagePath={file.storage_path}
+                  />
                 </div>
               ))}
             </div>
@@ -265,5 +290,27 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
         </section>
       </div>
     </main>
+  );
+}
+
+function FileIcon() {
+  return (
+    <svg
+      fill="none"
+      height="20"
+      style={{ color: "var(--muted)", flexShrink: 0 }}
+      viewBox="0 0 24 24"
+      width="20"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M13 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-6-5Z"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.6"
+      />
+      <path d="M13 3v5h6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" />
+    </svg>
   );
 }

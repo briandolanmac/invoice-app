@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { saveInvoicePdfToFiles } from "@/lib/saveInvoicePdf";
 import { createClient } from "@/lib/supabase/server";
 import { parseLineItems, totalsFor } from "@/lib/line-items";
 
@@ -18,6 +19,7 @@ export async function updateInvoice(formData: FormData) {
 
   const rows = parseLineItems(formData);
   const { subtotal, expenses, total } = totalsFor(rows);
+  const status = String(formData.get("status") || "draft");
   const supabase = await createClient();
 
   const { error: updateError } = await supabase
@@ -27,7 +29,7 @@ export async function updateInvoice(formData: FormData) {
       invoice_number: invoiceNumber,
       invoice_date: String(formData.get("invoice_date") || "").trim() || undefined,
       tour_group_name: String(formData.get("tour_group_name") || "").trim() || null,
-      status: String(formData.get("status") || "draft"),
+      status,
       notes: String(formData.get("notes") || "").trim() || null,
       payment_instructions: String(formData.get("payment_instructions") || "").trim() || null,
       subtotal_amount: subtotal,
@@ -48,6 +50,10 @@ export async function updateInvoice(formData: FormData) {
     if (itemsError) {
       redirect(`/invoices/${invoiceId}/edit?error=${encodeURIComponent(itemsError.message)}`);
     }
+  }
+
+  if (status === "sent") {
+    await saveInvoicePdfToFiles(supabase, invoiceId);
   }
 
   redirect(`/invoices/${invoiceId}?saved=1`);

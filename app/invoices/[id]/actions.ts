@@ -1,6 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { saveInvoicePdfToFiles } from "@/lib/saveInvoicePdf";
 import { createClient } from "@/lib/supabase/server";
 
 export async function copyInvoice(formData: FormData) {
@@ -63,7 +65,25 @@ export async function updateInvoiceStatus(formData: FormData) {
 
   const supabase = await createClient();
   await supabase.from("invoices").update({ status }).eq("id", invoiceId);
+  if (status === "sent") {
+    await saveInvoicePdfToFiles(supabase, invoiceId);
+  }
   redirect(`/invoices/${invoiceId}?saved=1`);
+}
+
+export async function deleteInvoiceFile(formData: FormData) {
+  const fileId = String(formData.get("file_id") || "");
+  const invoiceId = String(formData.get("invoice_id") || "");
+  const storageBucket = String(formData.get("storage_bucket") || "");
+  const storagePath = String(formData.get("storage_path") || "");
+  if (!fileId) return;
+
+  const supabase = await createClient();
+  if (storageBucket && storagePath) {
+    await supabase.storage.from(storageBucket).remove([storagePath]);
+  }
+  await supabase.from("invoice_files").delete().eq("id", fileId);
+  revalidatePath(`/invoices/${invoiceId}`);
 }
 
 export async function deleteInvoice(formData: FormData) {
