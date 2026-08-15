@@ -249,12 +249,14 @@ export default function LineItemsSection({
   initialServiceRows,
   initialExpenseRows,
   minRows = 3,
-  descriptionOptions,
+  serviceDescriptionOptions,
+  expenseDescriptionOptions,
 }: {
   initialServiceRows?: LineItemRowData[];
   initialExpenseRows?: LineItemRowData[];
   minRows?: number;
-  descriptionOptions?: string[];
+  serviceDescriptionOptions?: string[];
+  expenseDescriptionOptions?: string[];
 }) {
   const [serviceRows, setServiceRows] = useState<LineItemRowData[]>(() =>
     makeRows(initialServiceRows, minRows)
@@ -272,14 +274,14 @@ export default function LineItemsSection({
   return (
     <div style={{ display: "grid", gap: 24 }}>
       <RowGroup
-        descriptionOptions={descriptionOptions}
+        descriptionOptions={serviceDescriptionOptions}
         prefix="svc"
         rows={serviceRows}
         setRows={setServiceRows}
         title="Service charges"
       />
       <RowGroup
-        descriptionOptions={descriptionOptions}
+        descriptionOptions={expenseDescriptionOptions}
         prefix="exp"
         rows={expenseRows}
         setRows={setExpenseRows}

@@ -26,8 +26,6 @@ export async function updateInvoice(formData: FormData) {
       agency_id: agencyId,
       invoice_number: invoiceNumber,
       invoice_date: String(formData.get("invoice_date") || "").trim() || undefined,
-      due_date: String(formData.get("due_date") || "").trim() || null,
-      customer_reference: String(formData.get("customer_reference") || "").trim() || null,
       tour_group_name: String(formData.get("tour_group_name") || "").trim() || null,
       status: String(formData.get("status") || "draft"),
       notes: String(formData.get("notes") || "").trim() || null,

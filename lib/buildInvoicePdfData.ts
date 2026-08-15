@@ -5,7 +5,6 @@ type InvoiceMeta = {
   invoice_number: string;
   invoice_date: string;
   tour_group_name: string | null;
-  customer_reference: string | null;
   notes: string | null;
   payment_instructions: string | null;
 };
@@ -38,7 +37,6 @@ export function buildInvoicePdfData(
     invoice_number: meta.invoice_number,
     invoice_date: meta.invoice_date,
     tour_group_name: meta.tour_group_name,
-    customer_reference: meta.customer_reference,
     notes: meta.notes,
     payment_instructions: meta.payment_instructions,
     subtotal_amount,

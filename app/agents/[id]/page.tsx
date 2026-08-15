@@ -24,6 +24,7 @@ type AgencyDetailPageProps = {
 type Preset = {
   id: string;
   description: string;
+  item_type: string;
 };
 
 type Contact = {
@@ -50,7 +51,7 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
     supabase.from("agencies").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("agency_line_item_presets")
-      .select("id, description")
+      .select("id, description, item_type")
       .eq("agency_id", id)
       .order("sort_order")
       .order("created_at")
@@ -77,86 +78,22 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
     );
   }
 
+  const servicePresets = (presets || []).filter((preset) => preset.item_type !== "expense");
+  const expensePresets = (presets || []).filter((preset) => preset.item_type === "expense");
+
   return (
     <main className="page">
       <SavedToast initialSaved={search.saved === "1"} />
       <div className="shell">
-        <header
-          style={{
-            alignItems: "flex-start",
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 16,
-            justifyContent: "space-between",
-            marginBottom: 24,
-          }}
-        >
-          <div>
-            <Link className="button secondary" href="/agents">← Agents</Link>
-            <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>{agency.name}</h1>
-            {agency.billing_address ? (
-              <p className="muted" style={{ margin: "6px 0 0", whiteSpace: "pre-line" }}>
-                {agency.billing_address}
-              </p>
-            ) : null}
-          </div>
-          <DeleteAgencyForm action={deleteAgency} agencyId={id} />
-        </header>
-
-        <section className="card" style={{ display: "grid", gap: 14, marginBottom: 20, padding: 24 }}>
-          <h2 style={{ margin: 0 }}>Standard descriptions</h2>
-
-          {!presets?.length ? (
-            <p className="muted" style={{ margin: 0 }}>
-              None configured yet — no dropdown will appear for this agent until you add one below.
+        <header style={{ marginBottom: 24 }}>
+          <Link className="button secondary" href="/agents">← Agents</Link>
+          <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>{agency.name}</h1>
+          {agency.billing_address ? (
+            <p className="muted" style={{ margin: "6px 0 0", whiteSpace: "pre-line" }}>
+              {agency.billing_address}
             </p>
-          ) : (
-            <form action={updatePresets} style={{ display: "grid", gap: 8 }}>
-              <input name="agency_id" type="hidden" value={id} />
-              <div style={{ display: "grid", gap: 8 }}>
-                {presets.map((preset) => (
-                  <div key={preset.id} style={{ alignItems: "center", display: "flex", gap: 8 }}>
-                    <input
-                      defaultValue={preset.description}
-                      name={`description__${preset.id}`}
-                      style={{ ...inputStyle, flex: 1 }}
-                      type="text"
-                    />
-                    <button
-                      aria-label="Delete description"
-                      className="button secondary"
-                      formAction={deletePreset}
-                      name="preset_id"
-                      style={{ color: "var(--danger)", flexShrink: 0, padding: 10 }}
-                      type="submit"
-                      value={preset.id}
-                    >
-                      <TrashIcon />
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <button className="button secondary" style={{ justifySelf: "start" }} type="submit">
-                Save changes
-              </button>
-              <PendingOverlay />
-            </form>
-          )}
-
-          <form action={addPreset} style={{ display: "grid", gap: 8 }}>
-            <input name="agency_id" type="hidden" value={id} />
-            <textarea
-              name="description"
-              placeholder="e.g. 1010 Statue of Liberty Tour + One World Observation"
-              required
-              rows={3}
-              style={{ ...inputStyle, resize: "vertical" }}
-            />
-            <button className="button" style={{ justifySelf: "start" }} type="submit">
-              + Add description
-            </button>
-          </form>
-        </section>
+          ) : null}
+        </header>
 
         <section className="card" style={{ display: "grid", gap: 14, marginBottom: 20, padding: 24 }}>
           <h2 style={{ margin: 0 }}>Contacts</h2>
@@ -209,6 +146,7 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
                       aria-label="Delete contact"
                       className="button secondary"
                       formAction={deleteContact}
+                      formNoValidate
                       name="contact_id"
                       style={{ color: "var(--danger)", flexShrink: 0, padding: 10 }}
                       type="submit"
@@ -256,7 +194,27 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
           </form>
         </section>
 
-        <section className="card" style={{ display: "grid", gap: 14, padding: 24 }}>
+        <section className="card" style={{ display: "grid", gap: 24, marginBottom: 20, padding: 24 }}>
+          <h2 style={{ margin: 0 }}>Standard descriptions</h2>
+
+          <PresetGroup
+            agencyId={id}
+            emptyMessage="None configured yet — no dropdown will appear in the Services card until you add one below."
+            itemType="service"
+            presets={servicePresets}
+            title="Services"
+          />
+
+          <PresetGroup
+            agencyId={id}
+            emptyMessage="None configured yet — no dropdown will appear in the Expenses card until you add one below."
+            itemType="expense"
+            presets={expensePresets}
+            title="Expenses"
+          />
+        </section>
+
+        <section className="card" style={{ display: "grid", gap: 14, marginBottom: 20, padding: 24 }}>
           <h2 style={{ margin: 0 }}>Details</h2>
           <form action={updateAgencyDetails} style={{ display: "grid", gap: 14 }}>
             <input name="agency_id" type="hidden" value={id} />
@@ -286,8 +244,88 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
             <PendingOverlay />
           </form>
         </section>
+
+        <section className="card" style={{ display: "grid", gap: 6, padding: 24 }}>
+          <h2 style={{ margin: 0 }}>Danger zone</h2>
+          <p className="muted" style={{ margin: "0 0 12px" }}>
+            Permanently delete this agent. This also removes its standard descriptions and contacts.
+            Existing invoices keep their data but lose the agent link.
+          </p>
+          <DeleteAgencyForm action={deleteAgency} agencyId={id} />
+        </section>
       </div>
     </main>
+  );
+}
+
+function PresetGroup({
+  agencyId,
+  emptyMessage,
+  itemType,
+  presets,
+  title,
+}: {
+  agencyId: string;
+  emptyMessage: string;
+  itemType: "service" | "expense";
+  presets: Preset[];
+  title: string;
+}) {
+  return (
+    <div style={{ display: "grid", gap: 8 }}>
+      <h3 style={{ margin: 0 }}>{title}</h3>
+
+      {!presets.length ? (
+        <p className="muted" style={{ margin: 0 }}>{emptyMessage}</p>
+      ) : (
+        <form action={updatePresets} style={{ display: "grid", gap: 8 }}>
+          <input name="agency_id" type="hidden" value={agencyId} />
+          <div style={{ display: "grid", gap: 8 }}>
+            {presets.map((preset) => (
+              <div key={preset.id} style={{ alignItems: "center", display: "flex", gap: 8 }}>
+                <input
+                  defaultValue={preset.description}
+                  name={`description__${preset.id}`}
+                  style={{ ...inputStyle, flex: 1 }}
+                  type="text"
+                />
+                <button
+                  aria-label="Delete description"
+                  className="button secondary"
+                  formAction={deletePreset}
+                  formNoValidate
+                  name="preset_id"
+                  style={{ color: "var(--danger)", flexShrink: 0, padding: 10 }}
+                  type="submit"
+                  value={preset.id}
+                >
+                  <TrashIcon />
+                </button>
+              </div>
+            ))}
+          </div>
+          <button className="button secondary" style={{ justifySelf: "start" }} type="submit">
+            Save changes
+          </button>
+          <PendingOverlay />
+        </form>
+      )}
+
+      <form action={addPreset} style={{ display: "grid", gap: 8 }}>
+        <input name="agency_id" type="hidden" value={agencyId} />
+        <input name="item_type" type="hidden" value={itemType} />
+        <textarea
+          name="description"
+          placeholder="e.g. 1010 Statue of Liberty Tour + One World Observation"
+          required
+          rows={2}
+          style={{ ...inputStyle, resize: "vertical" }}
+        />
+        <button className="button secondary" style={{ justifySelf: "start" }} type="submit">
+          + Add {itemType === "expense" ? "expense" : "service"}
+        </button>
+      </form>
+    </div>
   );
 }
 

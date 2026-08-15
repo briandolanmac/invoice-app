@@ -7,12 +7,14 @@ import { createClient } from "@/lib/supabase/server";
 export async function addPreset(formData: FormData) {
   const agencyId = String(formData.get("agency_id") || "");
   const description = String(formData.get("description") || "").trim();
+  const itemType = String(formData.get("item_type") || "") === "expense" ? "expense" : "service";
   if (!agencyId || !description) return;
 
   const supabase = await createClient();
   await supabase.from("agency_line_item_presets").insert({
     agency_id: agencyId,
     description,
+    item_type: itemType,
   });
   revalidatePath(`/agents/${agencyId}`);
 }

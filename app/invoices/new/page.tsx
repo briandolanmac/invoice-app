@@ -6,8 +6,9 @@ import { createInvoice } from "./actions";
 import InvoiceFormFields from "../InvoiceFormFields";
 import NewInvoicePreviewButton from "./NewInvoicePreviewButton";
 
-type AgencyOption = { id: string; name: string };
-type PresetRow = { agency_id: string; description: string };
+type AgencyOption = { id: string; name: string; default_invoice_prefix: string | null };
+type PresetRow = { agency_id: string; description: string; item_type: string };
+type InvoiceNumberRow = { agency_id: string | null; invoice_number: string };
 
 export default async function NewInvoicePage({
   searchParams,
@@ -25,25 +26,37 @@ export default async function NewInvoicePage({
     redirect("/login");
   }
 
-  const [{ data: agencies }, { data: presetRows }] = usingDevSession
-    ? [{ data: [] as AgencyOption[] }, { data: [] as PresetRow[] }]
+  const [{ data: agencies }, { data: presetRows }, { data: invoiceNumberRows }] = usingDevSession
+    ? [{ data: [] as AgencyOption[] }, { data: [] as PresetRow[] }, { data: [] as InvoiceNumberRow[] }]
     : await Promise.all([
         supabase
           .from("agencies")
-          .select("id, name")
+          .select("id, name, default_invoice_prefix")
           .eq("is_active", true)
           .order("name")
           .returns<AgencyOption[]>(),
         supabase
           .from("agency_line_item_presets")
-          .select("agency_id, description")
+          .select("agency_id, description, item_type")
           .order("sort_order")
           .returns<PresetRow[]>(),
+        supabase
+          .from("invoices")
+          .select("agency_id, invoice_number")
+          .returns<InvoiceNumberRow[]>(),
       ]);
 
-  const agencyPresets: Record<string, string[]> = {};
+  const agencyServicePresets: Record<string, string[]> = {};
+  const agencyExpensePresets: Record<string, string[]> = {};
   for (const row of presetRows || []) {
-    (agencyPresets[row.agency_id] ||= []).push(row.description);
+    const target = row.item_type === "expense" ? agencyExpensePresets : agencyServicePresets;
+    (target[row.agency_id] ||= []).push(row.description);
+  }
+
+  const agencyInvoiceNumbers: Record<string, string[]> = {};
+  for (const row of invoiceNumberRows || []) {
+    if (!row.agency_id) continue;
+    (agencyInvoiceNumbers[row.agency_id] ||= []).push(row.invoice_number);
   }
 
   const today = new Date().toISOString().slice(0, 10);
@@ -72,7 +85,9 @@ export default async function NewInvoicePage({
           <form action={createInvoice} className="grid" id="new-invoice-form" style={{ gap: 20 }}>
             <InvoiceFormFields
               agencies={agencies}
-              agencyPresets={agencyPresets}
+              agencyExpensePresets={agencyExpensePresets}
+              agencyInvoiceNumbers={agencyInvoiceNumbers}
+              agencyServicePresets={agencyServicePresets}
               defaultInvoiceDate={today}
             />
 

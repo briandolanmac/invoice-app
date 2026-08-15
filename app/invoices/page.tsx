@@ -10,7 +10,6 @@ type InvoiceRow = {
   invoice_date: string;
   status: string;
   total_amount: number | null;
-  customer_reference: string | null;
   tour_group_name: string | null;
   notes: string | null;
   agencies: {
@@ -47,7 +46,7 @@ export default async function InvoicesPage({
     : await supabase
         .from("invoices")
         .select(
-          "id, invoice_number, invoice_date, status, total_amount, customer_reference, tour_group_name, notes, agencies(name)"
+          "id, invoice_number, invoice_date, status, total_amount, tour_group_name, notes, agencies(name)"
         )
         .order("invoice_date", { ascending: false })
         .returns<InvoiceRow[]>();
@@ -73,7 +72,6 @@ export default async function InvoicesPage({
         invoice.invoice_number,
         invoice.agencies?.name,
         invoice.tour_group_name,
-        invoice.customer_reference,
         invoice.notes,
         ...(descriptionsByInvoice.get(invoice.id) || []),
       ]

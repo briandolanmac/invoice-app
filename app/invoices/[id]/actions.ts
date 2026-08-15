@@ -31,8 +31,6 @@ export async function copyInvoice(formData: FormData) {
       agency_id: original.agency_id,
       invoice_number: placeholderNumber,
       invoice_date: today,
-      due_date: null,
-      customer_reference: original.customer_reference,
       tour_group_name: original.tour_group_name,
       notes: original.notes,
       payment_instructions: original.payment_instructions,

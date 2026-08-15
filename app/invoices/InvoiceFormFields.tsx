@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { nextInvoiceNumber } from "@/lib/invoice-number";
 import LineItemsSection, { type LineItemRowData } from "./LineItemsSection";
 
-type AgencyOption = { id: string; name: string };
+type AgencyOption = { id: string; name: string; default_invoice_prefix: string | null };
 
 const inputStyle = {
   border: "1px solid var(--border)",
@@ -16,33 +17,48 @@ const inputStyle = {
 
 export default function InvoiceFormFields({
   agencies,
-  agencyPresets,
+  agencyServicePresets,
+  agencyExpensePresets,
+  agencyInvoiceNumbers,
   defaultAgencyId = "",
   defaultInvoiceNumber = "",
   defaultInvoiceDate,
-  defaultDueDate = "",
   defaultStatus,
   defaultTourGroupName = "",
-  defaultCustomerReference = "",
   initialServiceRows,
   initialExpenseRows,
   minRows = 3,
 }: {
   agencies: AgencyOption[];
-  agencyPresets: Record<string, string[]>;
+  agencyServicePresets: Record<string, string[]>;
+  agencyExpensePresets: Record<string, string[]>;
+  /** Only needed on the New Invoice form -- powers auto-filling the
+   *  invoice number when an agent is picked. */
+  agencyInvoiceNumbers?: Record<string, string[]>;
   defaultAgencyId?: string;
   defaultInvoiceNumber?: string;
   defaultInvoiceDate: string;
-  defaultDueDate?: string;
   /** Only passed on the Edit form -- new invoices always start as 'draft'. */
   defaultStatus?: string;
   defaultTourGroupName?: string;
-  defaultCustomerReference?: string;
   initialServiceRows?: LineItemRowData[];
   initialExpenseRows?: LineItemRowData[];
   minRows?: number;
 }) {
   const [agencyId, setAgencyId] = useState(defaultAgencyId);
+  const [invoiceNumber, setInvoiceNumber] = useState(defaultInvoiceNumber);
+  const [invoiceNumberTouched, setInvoiceNumberTouched] = useState(Boolean(defaultInvoiceNumber));
+
+  function handleAgencyChange(newAgencyId: string) {
+    setAgencyId(newAgencyId);
+    if (invoiceNumberTouched || !agencyInvoiceNumbers) return;
+
+    const agency = agencies.find((a) => a.id === newAgencyId);
+    const prefix = agency?.default_invoice_prefix;
+    if (!prefix) return;
+
+    setInvoiceNumber(nextInvoiceNumber(prefix, agencyInvoiceNumbers[newAgencyId] || []));
+  }
 
   return (
     <>
@@ -53,7 +69,7 @@ export default function InvoiceFormFields({
             <span>Agent</span>
             <select
               name="agency_id"
-              onChange={(e) => setAgencyId(e.target.value)}
+              onChange={(e) => handleAgencyChange(e.target.value)}
               required
               style={inputStyle}
               value={agencyId}
@@ -67,12 +83,16 @@ export default function InvoiceFormFields({
           <label className="grid" style={{ gap: 6 }}>
             <span>Invoice number</span>
             <input
-              defaultValue={defaultInvoiceNumber}
               name="invoice_number"
+              onChange={(e) => {
+                setInvoiceNumber(e.target.value);
+                setInvoiceNumberTouched(true);
+              }}
               placeholder="e.g. RD-2026-001"
               required
               style={inputStyle}
               type="text"
+              value={invoiceNumber}
             />
           </label>
         </div>
@@ -80,10 +100,6 @@ export default function InvoiceFormFields({
           <label className="grid" style={{ gap: 6 }}>
             <span>Invoice date</span>
             <input defaultValue={defaultInvoiceDate} name="invoice_date" style={inputStyle} type="date" />
-          </label>
-          <label className="grid" style={{ gap: 6 }}>
-            <span>Due date</span>
-            <input defaultValue={defaultDueDate} name="due_date" style={inputStyle} type="date" />
           </label>
           {defaultStatus ? (
             <label className="grid" style={{ gap: 6 }}>
@@ -96,22 +112,11 @@ export default function InvoiceFormFields({
               </select>
             </label>
           ) : null}
-        </div>
-        <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
           <label className="grid" style={{ gap: 6 }}>
             <span>Tour / group name</span>
             <input
               defaultValue={defaultTourGroupName}
               name="tour_group_name"
-              style={inputStyle}
-              type="text"
-            />
-          </label>
-          <label className="grid" style={{ gap: 6 }}>
-            <span>Customer reference</span>
-            <input
-              defaultValue={defaultCustomerReference}
-              name="customer_reference"
               style={inputStyle}
               type="text"
             />
@@ -125,10 +130,11 @@ export default function InvoiceFormFields({
           Leave a row&apos;s description blank to skip it. Hours defaults to 1, rate to 0.
         </p>
         <LineItemsSection
-          descriptionOptions={agencyPresets[agencyId]}
+          expenseDescriptionOptions={agencyExpensePresets[agencyId]}
           initialExpenseRows={initialExpenseRows}
           initialServiceRows={initialServiceRows}
           minRows={minRows}
+          serviceDescriptionOptions={agencyServicePresets[agencyId]}
         />
       </section>
     </>

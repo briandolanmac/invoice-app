@@ -13,7 +13,6 @@ export type PdfInvoiceData = {
   invoice_number: string;
   invoice_date: string;
   tour_group_name: string | null;
-  customer_reference: string | null;
   notes: string | null;
   payment_instructions: string | null;
   subtotal_amount: number;
@@ -226,12 +225,6 @@ export default function InvoicePdfDocument({ invoice }: { invoice: PdfInvoiceDat
             <Text style={styles.value}>{formatDate(invoice.invoice_date)}</Text>
             <Text style={styles.label}>INVOICE #</Text>
             <Text style={styles.value}>{invoice.invoice_number}</Text>
-            {invoice.customer_reference ? (
-              <>
-                <Text style={styles.label}>REFERENCE</Text>
-                <Text style={styles.value}>{invoice.customer_reference}</Text>
-              </>
-            ) : null}
           </View>
           <View style={styles.toBlock}>
             <Text style={styles.label}>TO</Text>

@@ -27,7 +27,6 @@ export async function POST(request: Request) {
       invoice_number: String(formData.get("invoice_number") || "").trim() || "DRAFT",
       invoice_date: String(formData.get("invoice_date") || "").trim() || today,
       tour_group_name: String(formData.get("tour_group_name") || "").trim() || null,
-      customer_reference: String(formData.get("customer_reference") || "").trim() || null,
       notes: String(formData.get("notes") || "").trim() || null,
       payment_instructions: String(formData.get("payment_instructions") || "").trim() || null,
     },

@@ -155,14 +155,6 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
               <InvoiceStatusSelect action={updateInvoiceStatus} invoiceId={id} status={invoice.status} />
             </div>
             <div>
-              <p className="muted" style={{ margin: 0 }}>Due date</p>
-              <strong>{invoice.due_date || "—"}</strong>
-            </div>
-            <div>
-              <p className="muted" style={{ margin: 0 }}>Customer reference</p>
-              <strong>{invoice.customer_reference || "—"}</strong>
-            </div>
-            <div>
               <p className="muted" style={{ margin: 0 }}>Billing address</p>
               <strong style={{ whiteSpace: "pre-line" }}>{agency?.billing_address || "—"}</strong>
             </div>

@@ -45,7 +45,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       invoice_number: invoice.invoice_number,
       invoice_date: invoice.invoice_date,
       tour_group_name: invoice.tour_group_name,
-      customer_reference: invoice.customer_reference,
       notes: invoice.notes,
       payment_instructions: invoice.payment_instructions,
     },

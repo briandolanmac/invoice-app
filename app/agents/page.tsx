@@ -44,9 +44,6 @@ export default async function AgenciesPage({
         <header style={{ marginBottom: 24 }}>
           <Link className="button secondary" href="/">← Home</Link>
           <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>Agents</h1>
-          <p className="muted" style={{ margin: "6px 0 0" }}>
-            Reusable travel agent details for invoices.
-          </p>
         </header>
 
         {params.error ? (
@@ -56,7 +53,6 @@ export default async function AgenciesPage({
         ) : null}
 
         <section className="card" style={{ marginBottom: 20, padding: 24 }}>
-          <h2 style={{ marginTop: 0 }}>Existing agents</h2>
           {!agencies?.length ? (
             <p className="muted">No agents yet — add the first one below.</p>
           ) : (

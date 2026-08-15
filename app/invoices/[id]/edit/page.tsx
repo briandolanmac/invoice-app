@@ -6,8 +6,8 @@ import InvoiceFormFields from "../../InvoiceFormFields";
 import type { LineItemRowData } from "../../LineItemsSection";
 import { updateInvoice } from "./actions";
 
-type AgencyOption = { id: string; name: string };
-type PresetRow = { agency_id: string; description: string };
+type AgencyOption = { id: string; name: string; default_invoice_prefix: string | null };
+type PresetRow = { agency_id: string; description: string; item_type: string };
 
 type EditInvoicePageProps = {
   params: Promise<{ id: string }>;
@@ -34,13 +34,13 @@ export default async function EditInvoicePage({ params, searchParams }: EditInvo
     supabase.from("invoices").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("agencies")
-      .select("id, name")
+      .select("id, name, default_invoice_prefix")
       .eq("is_active", true)
       .order("name")
       .returns<AgencyOption[]>(),
     supabase
       .from("agency_line_item_presets")
-      .select("agency_id, description")
+      .select("agency_id, description, item_type")
       .order("sort_order")
       .returns<PresetRow[]>(),
     supabase
@@ -63,9 +63,11 @@ export default async function EditInvoicePage({ params, searchParams }: EditInvo
     );
   }
 
-  const agencyPresets: Record<string, string[]> = {};
+  const agencyServicePresets: Record<string, string[]> = {};
+  const agencyExpensePresets: Record<string, string[]> = {};
   for (const row of presetRows || []) {
-    (agencyPresets[row.agency_id] ||= []).push(row.description);
+    const target = row.item_type === "expense" ? agencyExpensePresets : agencyServicePresets;
+    (target[row.agency_id] ||= []).push(row.description);
   }
 
   // Legacy 'tip'/'adjustment' item types (from the historical import, before
@@ -110,10 +112,9 @@ export default async function EditInvoicePage({ params, searchParams }: EditInvo
 
           <InvoiceFormFields
             agencies={agencies || []}
-            agencyPresets={agencyPresets}
+            agencyExpensePresets={agencyExpensePresets}
+            agencyServicePresets={agencyServicePresets}
             defaultAgencyId={invoice.agency_id}
-            defaultCustomerReference={invoice.customer_reference || ""}
-            defaultDueDate={invoice.due_date || ""}
             defaultInvoiceDate={invoice.invoice_date}
             defaultInvoiceNumber={invoice.invoice_number}
             defaultStatus={invoice.status}

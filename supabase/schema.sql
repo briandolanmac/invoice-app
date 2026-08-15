@@ -233,6 +233,7 @@ create table if not exists public.agency_line_item_presets (
   id uuid primary key default gen_random_uuid(),
   agency_id uuid not null references public.agencies(id) on delete cascade,
   description text not null,
+  item_type text not null default 'service' check (item_type in ('service', 'expense')),
   sort_order integer not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
