@@ -9,13 +9,14 @@ type AgentRevenue = {
   total: number;
 };
 
-/** Fixed categorical hue order (never cycled/reassigned by rank) --
- *  reused from the app's dataviz palette reference. A pie's wedges are
- *  all mutually adjacent, so direct series are capped at 5 and anything
- *  past that folds into a neutral "Other" slice rather than reusing or
- *  inventing colors. */
-const SLICE_COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4"];
-const OTHER_COLOR = "#94a3b8";
+/** Fixed hue order (never cycled/reassigned by rank), led by the app's
+ *  own pink brand accent rather than a generic blue/orange categorical
+ *  set, per Brian's ask to keep the chart in the site's style. A pie's
+ *  wedges are all mutually adjacent, so direct series are capped at 5
+ *  and anything past that folds into a neutral "Other" slice rather
+ *  than reusing or inventing colors. */
+const SLICE_COLORS = ["#ec4899", "#f59e0b", "#14b8a6", "#8b5cf6", "#78716c"];
+const OTHER_COLOR = "#c9b3c0";
 const MAX_DIRECT_SLICES = 5;
 
 function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {

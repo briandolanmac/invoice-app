@@ -12,7 +12,9 @@ import {
   deletePreset,
   updateAgentPage,
 } from "./actions";
+import ContactRow from "./ContactRow";
 import { DeleteAgencyForm } from "./DangerActions";
+import PresetRow from "./PresetRow";
 
 type AgencyDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -116,52 +118,7 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
             ) : (
               <div style={{ display: "grid", gap: 8 }}>
                 {contacts.map((contact) => (
-                  <div
-                    key={contact.id}
-                    style={{
-                      alignItems: "center",
-                      border: "1px solid var(--border)",
-                      borderRadius: 14,
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: 8,
-                      padding: 10,
-                    }}
-                  >
-                    <input
-                      defaultValue={contact.name}
-                      name={`name__${contact.id}`}
-                      placeholder="Name"
-                      style={{ ...inputStyle, flex: "2 1 160px", minWidth: 0 }}
-                      type="text"
-                    />
-                    <input
-                      defaultValue={contact.phone || ""}
-                      name={`phone__${contact.id}`}
-                      placeholder="Phone"
-                      style={{ ...inputStyle, flex: "1 1 130px", minWidth: 0 }}
-                      type="tel"
-                    />
-                    <input
-                      defaultValue={contact.email || ""}
-                      name={`email__${contact.id}`}
-                      placeholder="Email (optional)"
-                      style={{ ...inputStyle, flex: "2 1 160px", minWidth: 0 }}
-                      type="email"
-                    />
-                    <button
-                      aria-label="Delete contact"
-                      className="button secondary"
-                      formAction={deleteContact}
-                      formNoValidate
-                      name="contact_id"
-                      style={{ color: "var(--danger)", flexShrink: 0, padding: 10 }}
-                      type="submit"
-                      value={contact.id}
-                    >
-                      <TrashIcon />
-                    </button>
-                  </div>
+                  <ContactRow agencyId={id} contact={contact} deleteAction={deleteContact} key={contact.id} />
                 ))}
               </div>
             )}
@@ -199,8 +156,8 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
 
           <section className="card" style={{ display: "grid", gap: 24, marginBottom: 20, padding: 24 }}>
             <h2 style={{ margin: 0 }}>Standard descriptions</h2>
-            <PresetGroup itemType="service" presets={servicePresets} />
-            <PresetGroup itemType="expense" presets={expensePresets} />
+            <PresetGroup agencyId={id} itemType="service" presets={servicePresets} />
+            <PresetGroup agencyId={id} itemType="expense" presets={expensePresets} />
           </section>
 
           <section className="card" style={{ display: "grid", gap: 14, marginBottom: 20, padding: 24 }}>
@@ -243,7 +200,15 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
   );
 }
 
-function PresetGroup({ itemType, presets }: { itemType: "service" | "expense"; presets: Preset[] }) {
+function PresetGroup({
+  agencyId,
+  itemType,
+  presets,
+}: {
+  agencyId: string;
+  itemType: "service" | "expense";
+  presets: Preset[];
+}) {
   const fieldName = itemType === "expense" ? "new_expense_description" : "new_service_description";
 
   return (
@@ -255,26 +220,7 @@ function PresetGroup({ itemType, presets }: { itemType: "service" | "expense"; p
       ) : (
         <div style={{ display: "grid", gap: 8 }}>
           {presets.map((preset) => (
-            <div key={preset.id} style={{ alignItems: "center", display: "flex", gap: 8 }}>
-              <input
-                defaultValue={preset.description}
-                name={`description__${preset.id}`}
-                style={{ ...inputStyle, flex: 1 }}
-                type="text"
-              />
-              <button
-                aria-label="Delete description"
-                className="button secondary"
-                formAction={deletePreset}
-                formNoValidate
-                name="preset_id"
-                style={{ color: "var(--danger)", flexShrink: 0, padding: 10 }}
-                type="submit"
-                value={preset.id}
-              >
-                <TrashIcon />
-              </button>
-            </div>
+            <PresetRow agencyId={agencyId} deleteAction={deletePreset} key={preset.id} preset={preset} />
           ))}
         </div>
       )}
@@ -303,20 +249,6 @@ function PresetGroup({ itemType, presets }: { itemType: "service" | "expense"; p
         </button>
       </div>
     </div>
-  );
-}
-
-function TrashIcon() {
-  return (
-    <svg fill="none" height="18" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg">
-      <path
-        d="M4 7h16M9 7V4h6v3m-8 0 1 13h10l1-13"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      />
-    </svg>
   );
 }
 

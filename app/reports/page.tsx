@@ -92,12 +92,14 @@ export default async function ReportsPage() {
               <p className="muted" style={{ margin: 0 }}>Total revenue</p>
               <strong className="revenue-stat-value">{formatMoney(totalRevenue)}</strong>
             </div>
-            {yearlyRevenue.map(([year, amount]) => (
-              <div className="revenue-stat-year" key={year}>
-                <p className="muted" style={{ margin: 0 }}>{year} revenue</p>
-                <strong className="revenue-stat-value">{formatMoney(amount)}</strong>
-              </div>
-            ))}
+            <div className="revenue-stat-years">
+              {yearlyRevenue.map(([year, amount]) => (
+                <div className="revenue-stat-year" key={year}>
+                  <p className="muted" style={{ margin: 0 }}>{year} revenue</p>
+                  <strong className="revenue-stat-value">{formatMoney(amount)}</strong>
+                </div>
+              ))}
+            </div>
           </div>
 
           <RevenueBarChart data={monthlyRevenue} />

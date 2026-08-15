@@ -92,6 +92,44 @@ export async function updateAgentPage(formData: FormData) {
     updates.push(supabase.from("agency_line_item_presets").update({ description }).eq("id", id));
   }
 
+  // Also catch anything left in the "+ Add" fields -- the main Save
+  // button should save everything on the page, not just edits to rows
+  // that already existed, even though the dedicated Add buttons handle
+  // the same fields immediately when clicked directly.
+  const newContactName = String(formData.get("new_contact_name") || "").trim();
+  if (newContactName) {
+    updates.push(
+      supabase.from("agency_contacts").insert({
+        agency_id: agencyId,
+        name: newContactName,
+        phone: String(formData.get("new_contact_phone") || "").trim() || null,
+        email: String(formData.get("new_contact_email") || "").trim() || null,
+      })
+    );
+  }
+
+  const newServiceDescription = String(formData.get("new_service_description") || "").trim();
+  if (newServiceDescription) {
+    updates.push(
+      supabase.from("agency_line_item_presets").insert({
+        agency_id: agencyId,
+        description: newServiceDescription,
+        item_type: "service",
+      })
+    );
+  }
+
+  const newExpenseDescription = String(formData.get("new_expense_description") || "").trim();
+  if (newExpenseDescription) {
+    updates.push(
+      supabase.from("agency_line_item_presets").insert({
+        agency_id: agencyId,
+        description: newExpenseDescription,
+        item_type: "expense",
+      })
+    );
+  }
+
   updates.push(
     supabase
       .from("agencies")

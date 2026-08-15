@@ -204,17 +204,30 @@ input[type="number"] {
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
 
+.revenue-stat-years {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
 .revenue-stat-value {
   font-size: 32px;
 }
 
 @media (max-width: 700px) {
-  /* Total revenue reads as the headline; each year is a smaller
-     sub-line underneath rather than an equally-sized grid tile. */
+  /* Total revenue reads as the headline, well separated from what
+     follows; the years sit in their own row next to each other rather
+     than each stacked on its own line. */
   .revenue-stats {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+    display: block;
+  }
+
+  .revenue-stat-total {
+    margin-bottom: 24px;
+  }
+
+  .revenue-stat-years {
+    gap: 28px;
   }
 
   .revenue-stat-year .revenue-stat-value {
