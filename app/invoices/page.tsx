@@ -2,8 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/get-current-user";
 import AgentFilterSelect from "./AgentFilterSelect";
 import SavedToast from "./SavedToast";
+import SearchInput from "./SearchInput";
 
 type InvoiceRow = {
   id: string;
@@ -38,9 +40,7 @@ export default async function InvoicesPage({
   const agentFilter = params.agent || "";
   const usingDevSession = await hasDevSession();
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user && !usingDevSession) {
     redirect("/login");
@@ -125,32 +125,10 @@ export default async function InvoicesPage({
               style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8 }}
             >
               <input name="agent" type="hidden" value={agentFilter} />
-              <input
-                defaultValue={query}
-                name="q"
-                placeholder="Search invoices…"
-                style={{
-                  border: "1px solid var(--border)",
-                  borderRadius: 999,
-                  flex: "1 1 160px",
-                  fontFamily: "inherit",
-                  minWidth: 0,
-                  padding: "10px 16px",
-                }}
-                type="search"
-              />
+              <SearchInput agentFilter={agentFilter} defaultValue={query} />
               <button className="button secondary" style={{ flexShrink: 0, padding: "10px 16px" }} type="submit">
                 Search
               </button>
-              {query ? (
-                <Link
-                  className="muted"
-                  href={agentFilter ? `/invoices?agent=${agentFilter}` : "/invoices"}
-                  style={{ textDecoration: "none" }}
-                >
-                  Clear
-                </Link>
-              ) : null}
             </form>
             {/* marginLeft:auto keeps this pinned to the right edge of its
                 own flex line even when the row wraps (agent filter + search
