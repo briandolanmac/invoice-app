@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { signOut } from "@/app/login/actions";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
@@ -38,6 +39,42 @@ function SignOutIcon() {
   );
 }
 
+/** Split out from HomeButton so its Supabase auth check runs inside its
+ *  own Suspense boundary instead of blocking the header (and the whole
+ *  page shell, since HomeButton lives in the root layout above any
+ *  route's own loading.tsx) on every single navigation. The icon streams
+ *  in a beat after the header itself, rather than the header waiting on it. */
+async function SignOutButton() {
+  const usingDevSession = await hasDevSession();
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isAuthenticated = Boolean(user) || usingDevSession;
+
+  if (!isAuthenticated) return <span />;
+
+  return (
+    <form action={signOut} style={{ justifySelf: "end" }}>
+      <button
+        aria-label="Sign out"
+        style={{
+          alignItems: "center",
+          background: "transparent",
+          border: 0,
+          color: "white",
+          cursor: "pointer",
+          display: "flex",
+          padding: 8,
+        }}
+        type="submit"
+      >
+        <SignOutIcon />
+      </button>
+    </form>
+  );
+}
+
 /**
  * Sticky top bar (not a floating overlay) so it always reserves its own
  * space in normal document flow -- a fixed-position floating circle was
@@ -48,14 +85,7 @@ function SignOutIcon() {
  * Grid with matching-width side columns keeps the logo visually centered
  * whether or not the sign-out button is present (e.g. on /login).
  */
-export default async function HomeButton() {
-  const usingDevSession = await hasDevSession();
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const isAuthenticated = Boolean(user) || usingDevSession;
-
+export default function HomeButton() {
   return (
     <div
       style={{
@@ -87,27 +117,9 @@ export default async function HomeButton() {
         <InvoiceIcon />
         Invoice App
       </Link>
-      {isAuthenticated ? (
-        <form action={signOut} style={{ justifySelf: "end" }}>
-          <button
-            aria-label="Sign out"
-            style={{
-              alignItems: "center",
-              background: "transparent",
-              border: 0,
-              color: "white",
-              cursor: "pointer",
-              display: "flex",
-              padding: 8,
-            }}
-            type="submit"
-          >
-            <SignOutIcon />
-          </button>
-        </form>
-      ) : (
-        <span />
-      )}
+      <Suspense fallback={<span />}>
+        <SignOutButton />
+      </Suspense>
     </div>
   );
 }
