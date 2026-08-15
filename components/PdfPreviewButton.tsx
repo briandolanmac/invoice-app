@@ -150,7 +150,16 @@ export default function PdfPreviewButton({
                 </button>
               </div>
             </div>
-            <div style={{ flex: 1, position: "relative" }}>
+            {/* minHeight:0 overrides a flex item's default min-height:auto,
+                which otherwise refuses to shrink below the canvas's natural
+                content height. Without it, this div grows to fit the full
+                rendered PDF instead of capping at the available space, and
+                the card's own overflow:hidden then silently clips whatever
+                doesn't fit -- with no scrollbar to reach it. Only bites when
+                the content is taller than the popup (routine on desktop's
+                height-capped modal; the mobile modal is full device height,
+                so it was tall enough to never trigger this). */}
+            <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
               {loading ? (
                 <div
                   style={{
