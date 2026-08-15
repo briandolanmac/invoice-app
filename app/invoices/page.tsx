@@ -152,7 +152,14 @@ export default async function InvoicesPage({
                 </Link>
               ) : null}
             </form>
-            <Link className="button" href="/invoices/new">New invoice</Link>
+            {/* marginLeft:auto keeps this pinned to the right edge of its
+                own flex line even when the row wraps (agent filter + search
+                on one line, this dropping to a second) -- without it, a
+                wrapped item starts at the left instead of staying aligned
+                with the page content's right edge. */}
+            <Link className="button" href="/invoices/new" style={{ marginLeft: "auto" }}>
+              New invoice
+            </Link>
           </div>
         </header>
 
