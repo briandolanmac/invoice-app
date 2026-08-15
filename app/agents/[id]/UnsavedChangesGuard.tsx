@@ -76,7 +76,12 @@ export default function UnsavedChangesGuard() {
   }
 
   return (
-    <span ref={anchorRef} style={{ display: "none" }}>
+    <>
+      {/* Marker only, used to find the enclosing form via a ref -- must
+          stay a sibling of the modal below, not its parent: display:none
+          hides descendants too, which previously made the modal invisible
+          even though the state driving it was set correctly. */}
+      <span ref={anchorRef} style={{ display: "none" }} />
       {pendingHref ? (
         <div
           className="pdf-modal-overlay"
@@ -108,6 +113,6 @@ export default function UnsavedChangesGuard() {
           </div>
         </div>
       ) : null}
-    </span>
+    </>
   );
 }
