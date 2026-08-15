@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
+import AgentFilterSelect from "./AgentFilterSelect";
 import SavedToast from "./SavedToast";
 
 type InvoiceRow = {
@@ -10,12 +11,15 @@ type InvoiceRow = {
   invoice_date: string;
   status: string;
   total_amount: number | null;
+  agency_id: string | null;
   tour_group_name: string | null;
   notes: string | null;
   agencies: {
     name: string;
   } | null;
 };
+
+type AgentOption = { id: string; name: string };
 
 const STATUS_COLORS: Record<string, string> = {
   draft: "#667085",
@@ -27,10 +31,11 @@ const STATUS_COLORS: Record<string, string> = {
 export default async function InvoicesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; saved?: string }>;
+  searchParams: Promise<{ agent?: string; q?: string; saved?: string }>;
 }) {
   const params = await searchParams;
   const query = (params.q || "").trim();
+  const agentFilter = params.agent || "";
   const usingDevSession = await hasDevSession();
   const supabase = await createClient();
   const {
@@ -41,17 +46,29 @@ export default async function InvoicesPage({
     redirect("/login");
   }
 
-  const { data: invoices } = usingDevSession
-    ? { data: [] as InvoiceRow[] }
-    : await supabase
-        .from("invoices")
-        .select(
-          "id, invoice_number, invoice_date, status, total_amount, tour_group_name, notes, agencies(name)"
-        )
-        .order("invoice_date", { ascending: false })
-        .returns<InvoiceRow[]>();
+  const [{ data: invoices }, { data: agents }] = usingDevSession
+    ? [{ data: [] as InvoiceRow[] }, { data: [] as AgentOption[] }]
+    : await Promise.all([
+        supabase
+          .from("invoices")
+          .select(
+            "id, invoice_number, invoice_date, status, total_amount, agency_id, tour_group_name, notes, agencies(name)"
+          )
+          .order("invoice_date", { ascending: false })
+          .returns<InvoiceRow[]>(),
+        supabase
+          .from("agencies")
+          .select("id, name")
+          .eq("is_active", true)
+          .order("name")
+          .returns<AgentOption[]>(),
+      ]);
 
   let visibleInvoices = invoices || [];
+
+  if (agentFilter) {
+    visibleInvoices = visibleInvoices.filter((invoice) => invoice.agency_id === agentFilter);
+  }
 
   if (query && visibleInvoices.length) {
     const { data: lineItems } = await supabase
@@ -101,11 +118,13 @@ export default async function InvoicesPage({
             <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>Invoices</h1>
           </div>
           <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 10 }}>
+            <AgentFilterSelect agents={agents || []} currentQuery={query} value={agentFilter} />
             <form
               action="/invoices"
               method="get"
               style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8 }}
             >
+              <input name="agent" type="hidden" value={agentFilter} />
               <input
                 defaultValue={query}
                 name="q"
@@ -124,7 +143,11 @@ export default async function InvoicesPage({
                 Search
               </button>
               {query ? (
-                <Link className="muted" href="/invoices" style={{ textDecoration: "none" }}>
+                <Link
+                  className="muted"
+                  href={agentFilter ? `/invoices?agent=${agentFilter}` : "/invoices"}
+                  style={{ textDecoration: "none" }}
+                >
                   Clear
                 </Link>
               ) : null}
@@ -137,7 +160,9 @@ export default async function InvoicesPage({
           {!invoices?.length ? (
             <p className="muted">No invoices yet. Create the first one to see it here.</p>
           ) : !visibleInvoices.length ? (
-            <p className="muted">No invoices match &quot;{query}&quot;.</p>
+            <p className="muted">
+              {query ? `No invoices match "${query}".` : "No invoices for this agent."}
+            </p>
           ) : (
             <div style={{ display: "grid", gap: 12 }}>
               {visibleInvoices.map((invoice) => (

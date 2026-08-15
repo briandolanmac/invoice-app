@@ -68,7 +68,7 @@ export default async function ReportsPage() {
     .sort((a, b) => b.total - a.total);
 
   function formatMoney(amount: number) {
-    return `$${amount.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 })}`;
+    return `$${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
   }
 
   return (
