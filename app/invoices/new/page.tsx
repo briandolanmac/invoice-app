@@ -53,10 +53,18 @@ export default async function NewInvoicePage({
     (target[row.agency_id] ||= []).push(row.description);
   }
 
+  // invoice_number is unique across the WHOLE table, not just per agent --
+  // so the "next number" suggestion has to avoid every existing number
+  // sharing an agent's prefix, regardless of which agent actually used it.
+  // Two agents sharing (or coincidentally landing on) the same prefix would
+  // otherwise both compute "prefix-1" as their first invoice and collide.
+  const allInvoiceNumbers = (invoiceNumberRows || []).map((row) => row.invoice_number);
   const agencyInvoiceNumbers: Record<string, string[]> = {};
-  for (const row of invoiceNumberRows || []) {
-    if (!row.agency_id) continue;
-    (agencyInvoiceNumbers[row.agency_id] ||= []).push(row.invoice_number);
+  for (const agency of agencies || []) {
+    if (!agency.default_invoice_prefix) continue;
+    agencyInvoiceNumbers[agency.id] = allInvoiceNumbers.filter((n) =>
+      n.startsWith(agency.default_invoice_prefix!)
+    );
   }
 
   const today = new Date().toISOString().slice(0, 10);

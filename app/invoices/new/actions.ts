@@ -32,7 +32,14 @@ export async function createInvoice(formData: FormData) {
     .single();
 
   if (invoiceError || !invoice) {
-    redirect(`/invoices/new?error=${encodeURIComponent(invoiceError?.message || "Could not create invoice")}`);
+    // Postgres unique_violation -- invoice_number is unique across every
+    // agent, not just this one, so this is reachable even when the
+    // auto-filled number looked untouched to this agent.
+    const message =
+      invoiceError?.code === "23505"
+        ? `Invoice number "${invoiceNumber}" is already in use -- please choose a different one.`
+        : invoiceError?.message || "Could not create invoice";
+    redirect(`/invoices/new?error=${encodeURIComponent(message)}`);
   }
 
   if (rows.length > 0) {

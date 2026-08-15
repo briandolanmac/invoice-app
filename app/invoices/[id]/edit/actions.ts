@@ -39,7 +39,11 @@ export async function updateInvoice(formData: FormData) {
     .eq("id", invoiceId);
 
   if (updateError) {
-    redirect(`/invoices/${invoiceId}/edit?error=${encodeURIComponent(updateError.message)}`);
+    const message =
+      updateError.code === "23505"
+        ? `Invoice number "${invoiceNumber}" is already in use -- please choose a different one.`
+        : updateError.message;
+    redirect(`/invoices/${invoiceId}/edit?error=${encodeURIComponent(message)}`);
   }
 
   await supabase.from("invoice_line_items").delete().eq("invoice_id", invoiceId);
