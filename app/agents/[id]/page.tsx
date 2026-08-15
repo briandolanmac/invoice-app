@@ -12,6 +12,8 @@ import {
   deletePreset,
   updateAgentPage,
 } from "./actions";
+import AddContactRow from "./AddContactRow";
+import AddPresetRow from "./AddPresetRow";
 import ContactRow from "./ContactRow";
 import { DeleteAgencyForm } from "./DangerActions";
 import PresetRow from "./PresetRow";
@@ -123,39 +125,11 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
               </div>
             )}
 
-            <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8 }}>
-              <input
-                name="new_contact_name"
-                placeholder="Name"
-                style={{ ...inputStyle, flex: "2 1 160px", minWidth: 0 }}
-                type="text"
-              />
-              <input
-                name="new_contact_phone"
-                placeholder="Phone"
-                style={{ ...inputStyle, flex: "1 1 130px", minWidth: 0 }}
-                type="tel"
-              />
-              <input
-                name="new_contact_email"
-                placeholder="Email (optional)"
-                style={{ ...inputStyle, flex: "2 1 160px", minWidth: 0 }}
-                type="email"
-              />
-              <button
-                className="button"
-                formAction={addContact}
-                formNoValidate
-                style={{ flexShrink: 0 }}
-                type="submit"
-              >
-                + Add contact
-              </button>
-            </div>
+            <AddContactRow addAction={addContact} agencyId={id} />
           </section>
 
           <section className="card" style={{ display: "grid", gap: 24, marginBottom: 20, padding: 24 }}>
-            <h2 style={{ margin: 0 }}>Standard descriptions</h2>
+            <h2 style={{ margin: 0 }}>Description shortcuts</h2>
             <PresetGroup agencyId={id} itemType="service" presets={servicePresets} />
             <PresetGroup agencyId={id} itemType="expense" presets={expensePresets} />
           </section>
@@ -209,8 +183,6 @@ function PresetGroup({
   itemType: "service" | "expense";
   presets: Preset[];
 }) {
-  const fieldName = itemType === "expense" ? "new_expense_description" : "new_service_description";
-
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <h3 style={{ margin: 0 }}>{itemType === "expense" ? "Expenses" : "Services"}</h3>
@@ -225,29 +197,7 @@ function PresetGroup({
         </div>
       )}
 
-      <div style={{ alignItems: "flex-start", display: "flex", flexWrap: "wrap", gap: 8 }}>
-        <textarea
-          name={fieldName}
-          placeholder={
-            itemType === "expense"
-              ? "e.g. Tips at $5 per hour"
-              : "e.g. 1010 Statue of Liberty Tour + One World Observation"
-          }
-          rows={2}
-          style={{ ...inputStyle, flex: "1 1 240px", minWidth: 0, resize: "vertical" }}
-        />
-        <button
-          className="button secondary"
-          formAction={addPreset}
-          formNoValidate
-          name="item_type"
-          style={{ flexShrink: 0 }}
-          type="submit"
-          value={itemType}
-        >
-          + Add {itemType === "expense" ? "expense" : "service"}
-        </button>
-      </div>
+      <AddPresetRow addAction={addPreset} agencyId={agencyId} itemType={itemType} />
     </div>
   );
 }
