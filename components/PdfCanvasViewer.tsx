@@ -5,58 +5,17 @@ import type { PDFDocumentLoadingTask, PDFDocumentProxy } from "pdfjs-dist";
 
 let pdfjsPromise: Promise<typeof import("pdfjs-dist")> | null = null;
 
-/** pdfjs-dist 6.x calls the brand-new (2025) Map/WeakMap.prototype.getOrInsertComputed
- *  on its main-thread API layer (e.g. caching sendWithPromise results per method
- *  name). Browsers without that yet throw "is not a function" the moment any PDF
- *  is opened -- polyfill it before pdfjs-dist loads so this works everywhere. */
-function ensureMapUpsertPolyfill() {
-  for (const ctor of [Map, WeakMap]) {
-    const proto = ctor.prototype as { getOrInsertComputed?: (key: unknown, cb: (key: unknown) => unknown) => unknown };
-    if (typeof proto.getOrInsertComputed !== "function") {
-      proto.getOrInsertComputed = function (this: Map<unknown, unknown>, key, callback) {
-        if (this.has(key)) return this.get(key);
-        const value = callback(key);
-        this.set(key, value);
-        return value;
-      };
-    }
-  }
-}
-
 /** iOS Safari doesn't reliably render PDFs embedded via <iframe>/<embed> --
  *  it commonly shows a blank frame. pdf.js sidesteps the native PDF viewer
  *  entirely by rasterizing pages onto <canvas>, so this renders the same
  *  way on every browser, mobile included. */
 function loadPdfjs() {
   if (!pdfjsPromise) {
-    ensureMapUpsertPolyfill();
     pdfjsPromise = import("pdfjs-dist").then((pdfjsLib) => {
-      const workerUrl = new URL(
+      pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
         "pdfjs-dist/build/pdf.worker.min.mjs",
         import.meta.url
       ).toString();
-
-      // The worker runs in its own JS realm, so the polyfill above never
-      // reaches it, and the worker bundle uses the same new Map/WeakMap
-      // method internally for its own parsing caches. Load it through a
-      // tiny blob-hosted module that installs the polyfill first, then
-      // imports the real worker script by its resolved URL.
-      const shim = `
-        for (const ctor of [Map, WeakMap]) {
-          if (typeof ctor.prototype.getOrInsertComputed !== "function") {
-            ctor.prototype.getOrInsertComputed = function (key, callback) {
-              if (this.has(key)) return this.get(key);
-              const value = callback(key);
-              this.set(key, value);
-              return value;
-            };
-          }
-        }
-        import(${JSON.stringify(workerUrl)});
-      `;
-      pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(
-        new Blob([shim], { type: "text/javascript" })
-      );
       return pdfjsLib;
     });
   }
