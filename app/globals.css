@@ -87,6 +87,7 @@ input[type="date"] {
   background: var(--accent);
   border: 0;
   border-radius: 999px;
+  box-shadow: 0 3px 0 rgb(0 0 0 / 18%), 0 4px 10px rgb(0 0 0 / 12%);
   color: white;
   cursor: pointer;
   display: inline-flex;
@@ -95,10 +96,20 @@ input[type="date"] {
   justify-content: center;
   padding: 12px 18px;
   text-decoration: none;
+  transform: translateY(0);
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease;
 }
 
 .button:hover {
   background: var(--accent-dark);
+}
+
+/* Gives buttons real physical feedback -- they sit "raised" via the
+   bottom shadow above, then flatten down into the shadow on press so
+   they visibly depress instead of just swapping color. */
+.button:active {
+  box-shadow: 0 0 0 rgb(0 0 0 / 18%), 0 1px 3px rgb(0 0 0 / 12%);
+  transform: translateY(3px);
 }
 
 .button.secondary {

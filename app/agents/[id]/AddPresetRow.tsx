@@ -52,7 +52,7 @@ export default function AddPresetRow({
         name={fieldName}
         placeholder={
           itemType === "expense"
-            ? "e.g. Tips at $5 per hour"
+            ? "e.g. MTA subway ticket"
             : "e.g. 1010 Statue of Liberty Tour + One World Observation"
         }
         ref={textareaRef}

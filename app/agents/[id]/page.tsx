@@ -17,6 +17,7 @@ import AddPresetRow from "./AddPresetRow";
 import ContactRow from "./ContactRow";
 import { DeleteAgencyForm } from "./DangerActions";
 import PresetRow from "./PresetRow";
+import UnsavedChangesGuard from "./UnsavedChangesGuard";
 
 type AgencyDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -159,6 +160,7 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
           </section>
 
           <PendingOverlay />
+          <UnsavedChangesGuard />
         </form>
 
         <section className="card" style={{ display: "grid", gap: 6, padding: 24 }}>
