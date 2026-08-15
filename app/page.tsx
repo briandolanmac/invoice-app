@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { signOut } from "@/app/login/actions";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -38,27 +37,11 @@ export default async function HomePage() {
   return (
     <main className="page">
       <div className="shell">
-        <header
-          style={{
-            alignItems: "center",
-            display: "flex",
-            gap: 16,
-            justifyContent: "space-between",
-            marginBottom: 24,
-          }}
-        >
-          <div>
-            <h1 style={{ fontSize: 38, margin: 0 }}>Invoice App</h1>
-            {usingDevSession ? (
-              <p className="muted" style={{ margin: "8px 0 0" }}>
-                Local dev mode is on. Supabase login is bypassed on this Mac only.
-              </p>
-            ) : null}
-          </div>
-          <form action={signOut}>
-            <button className="button secondary" type="submit">Sign out</button>
-          </form>
-        </header>
+        {usingDevSession ? (
+          <p className="muted" style={{ margin: "0 0 20px" }}>
+            Local dev mode is on. Supabase login is bypassed on this Mac only.
+          </p>
+        ) : null}
 
         <section
           className="card"

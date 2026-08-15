@@ -10,9 +10,7 @@ import {
   deleteAgency,
   deleteContact,
   deletePreset,
-  updateAgencyDetails,
-  updateContacts,
-  updatePresets,
+  updateAgentPage,
 } from "./actions";
 import { DeleteAgencyForm } from "./DangerActions";
 
@@ -85,28 +83,37 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
     <main className="page">
       <SavedToast initialSaved={search.saved === "1"} />
       <div className="shell">
-        <header style={{ marginBottom: 24 }}>
-          <Link className="button secondary" href="/agents">← Agents</Link>
-          <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>{agency.name}</h1>
-          {agency.billing_address ? (
-            <p className="muted" style={{ margin: "6px 0 0", whiteSpace: "pre-line" }}>
-              {agency.billing_address}
-            </p>
-          ) : null}
-        </header>
+        <form action={updateAgentPage}>
+          <input name="agency_id" type="hidden" value={id} />
 
-        <section className="card" style={{ display: "grid", gap: 14, marginBottom: 20, padding: 24 }}>
-          <h2 style={{ margin: 0 }}>Contacts</h2>
-          <p className="muted" style={{ margin: 0 }}>
-            People at {agency.name} — name, phone, and an optional email. Edit directly and save, or
-            remove with the trash icon.
-          </p>
+          <header
+            style={{
+              alignItems: "flex-start",
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 16,
+              justifyContent: "space-between",
+              marginBottom: 24,
+            }}
+          >
+            <div>
+              <Link className="button secondary" href="/agents">← Agents</Link>
+              <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>{agency.name}</h1>
+              {agency.billing_address ? (
+                <p className="muted" style={{ margin: "6px 0 0", whiteSpace: "pre-line" }}>
+                  {agency.billing_address}
+                </p>
+              ) : null}
+            </div>
+            <button className="button" type="submit">Save</button>
+          </header>
 
-          {!contacts?.length ? (
-            <p className="muted" style={{ margin: 0 }}>No contacts added yet.</p>
-          ) : (
-            <form action={updateContacts} style={{ display: "grid", gap: 8 }}>
-              <input name="agency_id" type="hidden" value={id} />
+          <section className="card" style={{ display: "grid", gap: 14, marginBottom: 20, padding: 24 }}>
+            <h2 style={{ margin: 0 }}>Contacts</h2>
+
+            {!contacts?.length ? (
+              <p className="muted" style={{ margin: 0 }}>No contacts added yet.</p>
+            ) : (
               <div style={{ display: "grid", gap: 8 }}>
                 {contacts.map((contact) => (
                   <div
@@ -157,67 +164,47 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
                   </div>
                 ))}
               </div>
-              <button className="button secondary" style={{ justifySelf: "start" }} type="submit">
-                Save changes
+            )}
+
+            <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8 }}>
+              <input
+                name="new_contact_name"
+                placeholder="Name"
+                style={{ ...inputStyle, flex: "2 1 160px", minWidth: 0 }}
+                type="text"
+              />
+              <input
+                name="new_contact_phone"
+                placeholder="Phone"
+                style={{ ...inputStyle, flex: "1 1 130px", minWidth: 0 }}
+                type="tel"
+              />
+              <input
+                name="new_contact_email"
+                placeholder="Email (optional)"
+                style={{ ...inputStyle, flex: "2 1 160px", minWidth: 0 }}
+                type="email"
+              />
+              <button
+                className="button"
+                formAction={addContact}
+                formNoValidate
+                style={{ flexShrink: 0 }}
+                type="submit"
+              >
+                + Add contact
               </button>
-              <PendingOverlay />
-            </form>
-          )}
+            </div>
+          </section>
 
-          <form
-            action={addContact}
-            style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8 }}
-          >
-            <input name="agency_id" type="hidden" value={id} />
-            <input
-              name="name"
-              placeholder="Name"
-              required
-              style={{ ...inputStyle, flex: "2 1 160px", minWidth: 0 }}
-              type="text"
-            />
-            <input
-              name="phone"
-              placeholder="Phone"
-              style={{ ...inputStyle, flex: "1 1 130px", minWidth: 0 }}
-              type="tel"
-            />
-            <input
-              name="email"
-              placeholder="Email (optional)"
-              style={{ ...inputStyle, flex: "2 1 160px", minWidth: 0 }}
-              type="email"
-            />
-            <button className="button" style={{ flexShrink: 0 }} type="submit">
-              + Add contact
-            </button>
-          </form>
-        </section>
+          <section className="card" style={{ display: "grid", gap: 24, marginBottom: 20, padding: 24 }}>
+            <h2 style={{ margin: 0 }}>Standard descriptions</h2>
+            <PresetGroup itemType="service" presets={servicePresets} />
+            <PresetGroup itemType="expense" presets={expensePresets} />
+          </section>
 
-        <section className="card" style={{ display: "grid", gap: 24, marginBottom: 20, padding: 24 }}>
-          <h2 style={{ margin: 0 }}>Standard descriptions</h2>
-
-          <PresetGroup
-            agencyId={id}
-            emptyMessage="None configured yet — no dropdown will appear in the Services card until you add one below."
-            itemType="service"
-            presets={servicePresets}
-            title="Services"
-          />
-
-          <PresetGroup
-            agencyId={id}
-            emptyMessage="None configured yet — no dropdown will appear in the Expenses card until you add one below."
-            itemType="expense"
-            presets={expensePresets}
-            title="Expenses"
-          />
-        </section>
-
-        <section className="card" style={{ display: "grid", gap: 14, marginBottom: 20, padding: 24 }}>
-          <h2 style={{ margin: 0 }}>Details</h2>
-          <form action={updateAgencyDetails} style={{ display: "grid", gap: 14 }}>
-            <input name="agency_id" type="hidden" value={id} />
+          <section className="card" style={{ display: "grid", gap: 14, marginBottom: 20, padding: 24 }}>
+            <h2 style={{ margin: 0 }}>Details</h2>
             <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
               <label className="grid" style={{ gap: 6 }}>
                 <span>Payment terms</span>
@@ -238,12 +225,10 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
                 />
               </label>
             </div>
-            <button className="button secondary" style={{ justifySelf: "start" }} type="submit">
-              Save changes
-            </button>
-            <PendingOverlay />
-          </form>
-        </section>
+          </section>
+
+          <PendingOverlay />
+        </form>
 
         <section className="card" style={{ display: "grid", gap: 6, padding: 24 }}>
           <h2 style={{ margin: 0 }}>Danger zone</h2>
@@ -258,73 +243,65 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
   );
 }
 
-function PresetGroup({
-  agencyId,
-  emptyMessage,
-  itemType,
-  presets,
-  title,
-}: {
-  agencyId: string;
-  emptyMessage: string;
-  itemType: "service" | "expense";
-  presets: Preset[];
-  title: string;
-}) {
+function PresetGroup({ itemType, presets }: { itemType: "service" | "expense"; presets: Preset[] }) {
+  const fieldName = itemType === "expense" ? "new_expense_description" : "new_service_description";
+
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <h3 style={{ margin: 0 }}>{title}</h3>
+      <h3 style={{ margin: 0 }}>{itemType === "expense" ? "Expenses" : "Services"}</h3>
 
       {!presets.length ? (
-        <p className="muted" style={{ margin: 0 }}>{emptyMessage}</p>
+        <p className="muted" style={{ margin: 0 }}>None yet.</p>
       ) : (
-        <form action={updatePresets} style={{ display: "grid", gap: 8 }}>
-          <input name="agency_id" type="hidden" value={agencyId} />
-          <div style={{ display: "grid", gap: 8 }}>
-            {presets.map((preset) => (
-              <div key={preset.id} style={{ alignItems: "center", display: "flex", gap: 8 }}>
-                <input
-                  defaultValue={preset.description}
-                  name={`description__${preset.id}`}
-                  style={{ ...inputStyle, flex: 1 }}
-                  type="text"
-                />
-                <button
-                  aria-label="Delete description"
-                  className="button secondary"
-                  formAction={deletePreset}
-                  formNoValidate
-                  name="preset_id"
-                  style={{ color: "var(--danger)", flexShrink: 0, padding: 10 }}
-                  type="submit"
-                  value={preset.id}
-                >
-                  <TrashIcon />
-                </button>
-              </div>
-            ))}
-          </div>
-          <button className="button secondary" style={{ justifySelf: "start" }} type="submit">
-            Save changes
-          </button>
-          <PendingOverlay />
-        </form>
+        <div style={{ display: "grid", gap: 8 }}>
+          {presets.map((preset) => (
+            <div key={preset.id} style={{ alignItems: "center", display: "flex", gap: 8 }}>
+              <input
+                defaultValue={preset.description}
+                name={`description__${preset.id}`}
+                style={{ ...inputStyle, flex: 1 }}
+                type="text"
+              />
+              <button
+                aria-label="Delete description"
+                className="button secondary"
+                formAction={deletePreset}
+                formNoValidate
+                name="preset_id"
+                style={{ color: "var(--danger)", flexShrink: 0, padding: 10 }}
+                type="submit"
+                value={preset.id}
+              >
+                <TrashIcon />
+              </button>
+            </div>
+          ))}
+        </div>
       )}
 
-      <form action={addPreset} style={{ display: "grid", gap: 8 }}>
-        <input name="agency_id" type="hidden" value={agencyId} />
-        <input name="item_type" type="hidden" value={itemType} />
+      <div style={{ alignItems: "flex-start", display: "flex", flexWrap: "wrap", gap: 8 }}>
         <textarea
-          name="description"
-          placeholder="e.g. 1010 Statue of Liberty Tour + One World Observation"
-          required
+          name={fieldName}
+          placeholder={
+            itemType === "expense"
+              ? "e.g. Tips at $5 per hour"
+              : "e.g. 1010 Statue of Liberty Tour + One World Observation"
+          }
           rows={2}
-          style={{ ...inputStyle, resize: "vertical" }}
+          style={{ ...inputStyle, flex: "1 1 240px", minWidth: 0, resize: "vertical" }}
         />
-        <button className="button secondary" style={{ justifySelf: "start" }} type="submit">
+        <button
+          className="button secondary"
+          formAction={addPreset}
+          formNoValidate
+          name="item_type"
+          style={{ flexShrink: 0 }}
+          type="submit"
+          value={itemType}
+        >
           + Add {itemType === "expense" ? "expense" : "service"}
         </button>
-      </form>
+      </div>
     </div>
   );
 }

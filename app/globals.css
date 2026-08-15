@@ -197,3 +197,27 @@ input[type="number"] {
     padding-top: max(14px, env(safe-area-inset-top));
   }
 }
+
+.revenue-stats {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.revenue-stat-value {
+  font-size: 32px;
+}
+
+@media (max-width: 700px) {
+  /* Total revenue reads as the headline; each year is a smaller
+     sub-line underneath rather than an equally-sized grid tile. */
+  .revenue-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .revenue-stat-year .revenue-stat-value {
+    font-size: 20px;
+  }
+}
