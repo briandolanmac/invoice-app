@@ -44,22 +44,36 @@ export default function RevenuePieChart({
 }) {
   const [filter, setFilter] = useState<"total" | string>("total");
 
-  const slices = agents
+  // Color is assigned by each agent's rank in the OVERALL total (the
+  // `agents` prop, already sorted by total desc from the server) and
+  // stays fixed regardless of which filter is selected -- otherwise an
+  // agent could land on a different color in the 2025 view than the
+  // 2026 view just because its rank happened to differ that year.
+  const colorByAgentId = new Map<string, string>();
+  agents.forEach((agent, i) => {
+    colorByAgentId.set(agent.agentId, i < MAX_DIRECT_SLICES ? SLICE_COLORS[i] : OTHER_COLOR);
+  });
+
+  function valueFor(agent: AgentRevenue) {
+    return filter === "total" ? agent.total : agent.byYear[filter] || 0;
+  }
+
+  const directSlices = agents
+    .slice(0, MAX_DIRECT_SLICES)
     .map((agent) => ({
+      color: colorByAgentId.get(agent.agentId)!,
       name: agent.name,
-      value: filter === "total" ? agent.total : agent.byYear[filter] || 0,
+      value: valueFor(agent),
     }))
-    .filter((slice) => slice.value > 0)
-    .sort((a, b) => b.value - a.value);
+    .filter((slice) => slice.value > 0);
 
-  const direct = slices.slice(0, MAX_DIRECT_SLICES);
-  const rest = slices.slice(MAX_DIRECT_SLICES);
-  const otherTotal = rest.reduce((sum, slice) => sum + slice.value, 0);
+  const otherTotal = agents.slice(MAX_DIRECT_SLICES).reduce((sum, agent) => sum + valueFor(agent), 0);
 
-  const wedges = direct.map((slice, i) => ({ ...slice, color: SLICE_COLORS[i] }));
+  const wedges = [...directSlices];
   if (otherTotal > 0) {
     wedges.push({ name: "Other", value: otherTotal, color: OTHER_COLOR });
   }
+  wedges.sort((a, b) => b.value - a.value);
 
   const grandTotal = wedges.reduce((sum, w) => sum + w.value, 0);
 

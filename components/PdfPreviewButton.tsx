@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import PdfCanvasViewer from "./PdfCanvasViewer";
 
 /** Reusable "view a PDF in a popup" button + modal. Renders the PDF via
@@ -14,11 +14,16 @@ export default function PdfPreviewButton({
   buttonLabel = "Preview PDF",
   fileName,
   loadPdf,
+  trigger,
 }: {
   buttonClassName?: string;
   buttonLabel?: string;
   fileName: string;
   loadPdf: () => Promise<Blob>;
+  /** Renders a custom trigger element in place of the default button --
+   *  the same popup opens either way (e.g. the Files list wants an
+   *  icon + filename to be what's clickable, not a separate pill). */
+  trigger?: (onClick: () => void) => ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -98,9 +103,13 @@ export default function PdfPreviewButton({
 
   return (
     <>
-      <button className={buttonClassName} onClick={handleOpen} type="button">
-        {buttonLabel}
-      </button>
+      {trigger ? (
+        trigger(handleOpen)
+      ) : (
+        <button className={buttonClassName} onClick={handleOpen} type="button">
+          {buttonLabel}
+        </button>
+      )}
 
       {open ? (
         <div className="pdf-modal-overlay" onClick={handleClose}>

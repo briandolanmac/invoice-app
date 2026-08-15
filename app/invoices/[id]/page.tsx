@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import SavedToast from "../SavedToast";
 import { copyInvoice, deleteInvoice, deleteInvoiceFile, updateInvoiceStatus } from "./actions";
 import { DeleteFileForm, DeleteInvoiceForm } from "./DangerActions";
+import FilePreviewButton from "./FilePreviewButton";
 import InvoiceDetailPdfButton from "./InvoiceDetailPdfButton";
 import InvoiceStatusSelect from "./InvoiceStatusSelect";
 
@@ -243,24 +244,7 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
                   }}
                 >
                   {file.url ? (
-                    <a
-                      href={file.url}
-                      rel="noreferrer"
-                      style={{
-                        alignItems: "center",
-                        color: "inherit",
-                        display: "flex",
-                        gap: 10,
-                        minWidth: 0,
-                        textDecoration: "none",
-                      }}
-                      target="_blank"
-                    >
-                      <FileIcon />
-                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {file.file_name}
-                      </span>
-                    </a>
+                    <FilePreviewButton fileName={file.file_name} url={file.url} />
                   ) : (
                     <span style={{ alignItems: "center", color: "var(--muted)", display: "flex", gap: 10 }}>
                       <FileIcon />
