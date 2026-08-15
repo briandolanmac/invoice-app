@@ -22,7 +22,7 @@ export async function updateInvoice(formData: FormData) {
   const status = String(formData.get("status") || "draft");
   const supabase = await createClient();
 
-  const { error: updateError } = await supabase
+  const { data: updatedInvoice, error: updateError } = await supabase
     .from("invoices")
     .update({
       agency_id: agencyId,
@@ -36,7 +36,9 @@ export async function updateInvoice(formData: FormData) {
       expense_amount: expenses,
       total_amount: total,
     })
-    .eq("id", invoiceId);
+    .eq("id", invoiceId)
+    .select("*, agencies(name, billing_address)")
+    .single();
 
   if (updateError) {
     const message =
@@ -57,7 +59,7 @@ export async function updateInvoice(formData: FormData) {
   }
 
   if (status === "sent") {
-    await saveInvoicePdfToFiles(supabase, invoiceId);
+    await saveInvoicePdfToFiles(supabase, invoiceId, updatedInvoice);
   }
 
   redirect(`/invoices/${invoiceId}?saved=1`);

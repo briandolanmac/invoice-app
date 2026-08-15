@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/get-current-user";
 import { createInvoice } from "./actions";
 import InvoiceFormFields from "../InvoiceFormFields";
 import NewInvoicePreviewButton from "./NewInvoicePreviewButton";
@@ -18,9 +19,7 @@ export default async function NewInvoicePage({
   const params = await searchParams;
   const usingDevSession = await hasDevSession();
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user && !usingDevSession) {
     redirect("/login");

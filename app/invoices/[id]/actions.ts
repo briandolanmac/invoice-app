@@ -9,20 +9,18 @@ export async function copyInvoice(formData: FormData) {
   const invoiceId = String(formData.get("invoice_id") || "");
   const supabase = await createClient();
 
-  const { data: original } = await supabase
-    .from("invoices")
-    .select("*")
-    .eq("id", invoiceId)
-    .maybeSingle();
+  // Neither query depends on the other's result, only on invoiceId.
+  const [{ data: original }, { data: items }] = await Promise.all([
+    supabase.from("invoices").select("*").eq("id", invoiceId).maybeSingle(),
+    supabase
+      .from("invoice_line_items")
+      .select("item_type, description, line_date, quantity, unit, unit_price, sort_order")
+      .eq("invoice_id", invoiceId)
+      .order("sort_order"),
+  ]);
   if (!original) {
     redirect("/invoices?error=Invoice%20not%20found");
   }
-
-  const { data: items } = await supabase
-    .from("invoice_line_items")
-    .select("item_type, description, line_date, quantity, unit, unit_price, sort_order")
-    .eq("invoice_id", invoiceId)
-    .order("sort_order");
 
   const today = new Date().toISOString().slice(0, 10);
   const placeholderNumber = `${original.invoice_number}-COPY-${Date.now().toString().slice(-4)}`;
@@ -64,9 +62,16 @@ export async function updateInvoiceStatus(formData: FormData) {
   if (!invoiceId || !status) return;
 
   const supabase = await createClient();
-  await supabase.from("invoices").update({ status }).eq("id", invoiceId);
   if (status === "sent") {
-    await saveInvoicePdfToFiles(supabase, invoiceId);
+    const { data: invoice } = await supabase
+      .from("invoices")
+      .update({ status })
+      .eq("id", invoiceId)
+      .select("*, agencies(name, billing_address)")
+      .single();
+    await saveInvoicePdfToFiles(supabase, invoiceId, invoice);
+  } else {
+    await supabase.from("invoices").update({ status }).eq("id", invoiceId);
   }
   redirect(`/invoices/${invoiceId}?saved=1`);
 }

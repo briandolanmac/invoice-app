@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/get-current-user";
 import SavedToast from "../SavedToast";
 import { copyInvoice, deleteInvoice, deleteInvoiceFile, updateInvoiceStatus } from "./actions";
 import { DeleteFileForm, DeleteInvoiceForm } from "./DangerActions";
@@ -45,9 +46,7 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
   const search = await searchParams;
   const usingDevSession = await hasDevSession();
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user && !usingDevSession) {
     redirect("/login");
@@ -63,11 +62,27 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
     );
   }
 
-  const { data: invoice } = await supabase
-    .from("invoices")
-    .select("*, agencies(name, billing_address, contact_name)")
-    .eq("id", id)
-    .maybeSingle();
+  // None of these three depend on each other's results (only on `id`), so
+  // they run as one parallel batch instead of fetching the invoice first
+  // and only starting items/files after it comes back.
+  const [{ data: invoice }, { data: items }, { data: files }] = await Promise.all([
+    supabase
+      .from("invoices")
+      .select("*, agencies(name, billing_address, contact_name)")
+      .eq("id", id)
+      .maybeSingle(),
+    supabase
+      .from("invoice_line_items")
+      .select("id, item_type, description, line_date, quantity, unit, unit_price, line_total")
+      .eq("invoice_id", id)
+      .order("sort_order")
+      .returns<LineItem[]>(),
+    supabase
+      .from("invoice_files")
+      .select("id, storage_bucket, storage_path, file_name, file_role")
+      .eq("invoice_id", id)
+      .returns<InvoiceFile[]>(),
+  ]);
 
   if (!invoice) {
     return (
@@ -81,20 +96,6 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
       </main>
     );
   }
-
-  const [{ data: items }, { data: files }] = await Promise.all([
-    supabase
-      .from("invoice_line_items")
-      .select("id, item_type, description, line_date, quantity, unit, unit_price, line_total")
-      .eq("invoice_id", id)
-      .order("sort_order")
-      .returns<LineItem[]>(),
-    supabase
-      .from("invoice_files")
-      .select("id, storage_bucket, storage_path, file_name, file_role")
-      .eq("invoice_id", id)
-      .returns<InvoiceFile[]>(),
-  ]);
 
   const fileLinks = await Promise.all(
     (files || []).map(async (file) => {

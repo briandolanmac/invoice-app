@@ -6,6 +6,15 @@ import type { createClient } from "@/lib/supabase/server";
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
+type InvoiceWithAgency = {
+  invoice_number: string;
+  invoice_date: string;
+  tour_group_name: string | null;
+  notes: string | null;
+  payment_instructions: string | null;
+  agencies: { name: string; billing_address: string | null } | null;
+};
+
 const BUCKET = "invoice-application";
 
 /** Renders an invoice's current PDF and upserts it into the Files
@@ -13,20 +22,34 @@ const BUCKET = "invoice-application";
  *  invoice is marked Sent, so a copy is captured automatically instead
  *  of relying on someone remembering to save one by hand. Swallows
  *  render/upload errors rather than throwing, since this always runs
- *  as a side effect of a status change that should succeed either way. */
-export async function saveInvoicePdfToFiles(supabase: SupabaseClient, invoiceId: string) {
-  const { data: invoice } = await supabase
-    .from("invoices")
-    .select("*, agencies(name, billing_address)")
-    .eq("id", invoiceId)
-    .maybeSingle();
+ *  as a side effect of a status change that should succeed either way.
+ *
+ *  `prefetchedInvoice` lets a caller that just ran an UPDATE ... RETURNING
+ *  on this same row pass it straight through instead of this function
+ *  re-fetching it -- both current callers update the invoice's status
+ *  immediately before calling this, so without it every "mark as sent"
+ *  did an avoidable extra round trip re-reading the row it just wrote. */
+export async function saveInvoicePdfToFiles(
+  supabase: SupabaseClient,
+  invoiceId: string,
+  prefetchedInvoice?: InvoiceWithAgency | null
+) {
+  const [invoice, { data: items }] = await Promise.all([
+    prefetchedInvoice !== undefined
+      ? prefetchedInvoice
+      : supabase
+          .from("invoices")
+          .select("*, agencies(name, billing_address)")
+          .eq("id", invoiceId)
+          .maybeSingle()
+          .then((res) => res.data as InvoiceWithAgency | null),
+    supabase
+      .from("invoice_line_items")
+      .select("item_type, description, line_date, quantity, unit_price")
+      .eq("invoice_id", invoiceId)
+      .order("sort_order"),
+  ]);
   if (!invoice) return;
-
-  const { data: items } = await supabase
-    .from("invoice_line_items")
-    .select("item_type, description, line_date, quantity, unit_price")
-    .eq("invoice_id", invoiceId)
-    .order("sort_order");
 
   const agency = invoice.agencies as { name: string; billing_address: string | null } | null;
 

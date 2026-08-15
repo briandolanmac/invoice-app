@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/get-current-user";
 import SavedToast from "../../invoices/SavedToast";
 import PendingOverlay from "@/components/PendingOverlay";
 import {
@@ -42,9 +43,7 @@ export default async function AgencyDetailPage({ params, searchParams }: AgencyD
   const search = await searchParams;
   const usingDevSession = await hasDevSession();
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user && !usingDevSession) {
     redirect("/login");

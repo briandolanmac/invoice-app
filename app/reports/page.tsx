@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/get-current-user";
 import RevenueBarChart from "./RevenueBarChart";
 import RevenuePieChart from "./RevenuePieChart";
 
@@ -15,9 +16,7 @@ type InvoiceRow = {
 export default async function ReportsPage() {
   const usingDevSession = await hasDevSession();
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user && !usingDevSession) {
     redirect("/login");

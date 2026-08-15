@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { signOut } from "@/app/login/actions";
 import { hasDevSession } from "@/lib/dev-auth-server";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/get-current-user";
 
 function InvoiceIcon() {
   return (
@@ -46,10 +46,7 @@ function SignOutIcon() {
  *  in a beat after the header itself, rather than the header waiting on it. */
 async function SignOutButton() {
   const usingDevSession = await hasDevSession();
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   const isAuthenticated = Boolean(user) || usingDevSession;
 
   if (!isAuthenticated) return <span />;

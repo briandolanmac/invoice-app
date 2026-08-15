@@ -16,6 +16,10 @@ export async function createInvoice(formData: FormData) {
   }
 
   const rows = parseLineItems(formData);
+  // Computed up front (pure, no DB dependency) so totals can go in the same
+  // insert as everything else instead of a trailing UPDATE after the fact --
+  // cuts a full round-trip off every invoice save.
+  const { subtotal, expenses, total } = totalsFor(rows);
   const supabase = await createClient();
 
   const { data: invoice, error: invoiceError } = await supabase
@@ -27,6 +31,9 @@ export async function createInvoice(formData: FormData) {
       tour_group_name: String(formData.get("tour_group_name") || "").trim() || null,
       notes: String(formData.get("notes") || "").trim() || null,
       payment_instructions: String(formData.get("payment_instructions") || "").trim() || null,
+      subtotal_amount: subtotal,
+      expense_amount: expenses,
+      total_amount: total,
     })
     .select("id")
     .single();
@@ -51,12 +58,6 @@ export async function createInvoice(formData: FormData) {
       redirect(`/invoices/new?error=${encodeURIComponent(itemsError.message)}`);
     }
   }
-
-  const { subtotal, expenses, total } = totalsFor(rows);
-  await supabase
-    .from("invoices")
-    .update({ subtotal_amount: subtotal, expense_amount: expenses, total_amount: total })
-    .eq("id", invoice.id);
 
   redirect("/invoices?saved=1");
 }
