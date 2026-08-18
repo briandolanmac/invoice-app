@@ -45,10 +45,17 @@ function TrashIcon() {
 /** Appends a preset as its own new line rather than replacing the field --
  *  lets one row cover two bundled tours sharing a single date/price (e.g.
  *  "1100 MLB Yankees..." + "1101 MLB Yankees..." on one invoice line) by
- *  picking two presets in a row instead of only ever replacing the field. */
+ *  picking two presets in a row instead of only ever replacing the field.
+ *  Leaves a trailing newline after the pick so the field is primed for
+ *  another line -- without it, currentLineOf() on refocus would treat the
+ *  whole just-picked line as an in-progress search, matching nothing and
+ *  hiding the dropdown entirely (the actual bug: picking a first preset
+ *  worked, but the list never reappeared to pick a second one). The
+ *  trailing newline is invisible in the saved data since parseLineItems
+ *  already trims the description before storing it. */
 function appendDescriptionLine(current: string, addition: string) {
-  const trimmed = current.trimEnd();
-  return trimmed ? `${trimmed}\n${addition}` : addition;
+  const trimmed = current.replace(/\n+$/, "");
+  return trimmed ? `${trimmed}\n${addition}\n` : `${addition}\n`;
 }
 
 /** The text after the last newline -- what the user is actively typing for
@@ -129,6 +136,7 @@ function DescriptionField({
                 cursor: "pointer",
                 fontSize: 14,
                 padding: "10px 12px",
+                whiteSpace: "pre-line",
               }}
             >
               {opt}

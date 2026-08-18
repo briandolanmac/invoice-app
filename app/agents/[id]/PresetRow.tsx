@@ -54,11 +54,16 @@ export default function PresetRow({
 
   return (
     <div style={{ alignItems: "center", display: "flex", gap: 8 }}>
-      <input
+      {/* textarea (not input) so an existing shortcut can be edited to
+          span two lines, matching AddPresetRow's field -- lets a shortcut
+          itself hold a combo like two bundled tour descriptions, picked
+          as one line-item pick instead of appending presets one at a
+          time on the invoice form. */}
+      <textarea
         defaultValue={preset.description}
         name={`description__${preset.id}`}
-        style={{ ...inputStyle, flex: 1 }}
-        type="text"
+        rows={2}
+        style={{ ...inputStyle, flex: 1, resize: "vertical" }}
       />
       <button
         aria-label="Delete description"
