@@ -94,7 +94,14 @@ export default function PdfPreviewButton({
     if (!blob) return;
     const file = new File([blob], fileName, { type: "application/pdf" });
     try {
-      await navigator.share({ files: [file], title: fileName });
+      // files-only, no title/text -- iOS Messages can drop the attachment
+      // and just send the title as message text instead when sharing
+      // straight to an existing/recent contact from the share sheet's
+      // quick-share row (worked fine going through the full Messages
+      // compose flow, which is what "leave the recipient blank" landed
+      // on). The File's own `name` already carries the filename, so title
+      // here was redundant anyway.
+      await navigator.share({ files: [file] });
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") return;
       setShareError(err instanceof Error ? err.message : "Could not share PDF");
