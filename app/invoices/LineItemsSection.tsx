@@ -42,12 +42,35 @@ function TrashIcon() {
   );
 }
 
+/** Appends a preset as its own new line rather than replacing the field --
+ *  lets one row cover two bundled tours sharing a single date/price (e.g.
+ *  "1100 MLB Yankees..." + "1101 MLB Yankees..." on one invoice line) by
+ *  picking two presets in a row instead of only ever replacing the field. */
+function appendDescriptionLine(current: string, addition: string) {
+  const trimmed = current.trimEnd();
+  return trimmed ? `${trimmed}\n${addition}` : addition;
+}
+
+/** The text after the last newline -- what the user is actively typing for
+ *  a new line, used to filter the preset dropdown once earlier lines are
+ *  already committed (filtering against the whole multi-line value would
+ *  never match anything past the first line). */
+function currentLineOf(value: string) {
+  const lastBreak = value.lastIndexOf("\n");
+  return lastBreak === -1 ? value : value.slice(lastBreak + 1);
+}
+
 /**
  * Custom dropdown for the description field, replacing native HTML
  * <datalist> -- iOS Safari doesn't render datalist as an actual dropdown,
  * it shows a horizontal row of suggestion chips above the keyboard
  * (easy to miss, doesn't look tappable). This renders a real listbox
  * that behaves the same on every device.
+ *
+ * A <textarea> (not <input>) so one row can hold more than one description
+ * line -- e.g. two tours booked the same day sharing one date/price/total.
+ * Picking a preset appends a new line instead of replacing the field, so
+ * multiple presets can be combined onto one row.
  */
 function DescriptionField({
   name,
@@ -61,21 +84,22 @@ function DescriptionField({
   value: string;
 }) {
   const [open, setOpen] = useState(false);
-  const filtered = value.trim()
-    ? options.filter((opt) => opt.toLowerCase().includes(value.trim().toLowerCase()))
+  const currentLine = currentLineOf(value).trim();
+  const filtered = currentLine
+    ? options.filter((opt) => opt.toLowerCase().includes(currentLine.toLowerCase()))
     : options;
 
   return (
     <div style={{ position: "relative" }}>
-      <input
+      <textarea
         autoComplete="off"
         name={name}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setOpen(true)}
         placeholder="Description"
-        style={inputStyle}
-        type="text"
+        rows={2}
+        style={{ ...inputStyle, resize: "vertical" }}
         value={value}
       />
       {open && filtered.length > 0 ? (
@@ -98,7 +122,7 @@ function DescriptionField({
             <div
               key={opt}
               onClick={() => {
-                onChange(opt);
+                onChange(appendDescriptionLine(value, opt));
                 setOpen(false);
               }}
               style={{
@@ -176,12 +200,12 @@ function RowGroup({
                   value={row.description}
                 />
               ) : (
-                <input
+                <textarea
                   name={`${prefix}_desc_${i}`}
                   onChange={(e) => updateRow(i, { description: e.target.value })}
                   placeholder="Description"
-                  style={{ ...inputStyle, minWidth: 0 }}
-                  type="text"
+                  rows={2}
+                  style={{ ...inputStyle, minWidth: 0, resize: "vertical" }}
                   value={row.description}
                 />
               )}
