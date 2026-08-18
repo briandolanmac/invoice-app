@@ -189,7 +189,7 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
                       {TYPE_LABELS[item.item_type] || item.item_type}
                       {item.line_date ? ` · ${item.line_date}` : ""}
                     </span>
-                    <p style={{ margin: "2px 0 0" }}>{item.description}</p>
+                    <p style={{ margin: "2px 0 0", whiteSpace: "pre-line" }}>{item.description}</p>
                     <span className="muted" style={{ fontSize: 13 }}>
                       {item.quantity} {item.unit || ""} × ${Number(item.unit_price).toFixed(2)}
                     </span>
