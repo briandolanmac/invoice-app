@@ -55,6 +55,13 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const buffer = await renderToBuffer(<InvoicePdfDocument invoice={pdfData} />);
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
+      // Explicit no-store: this route's whole point is to always reflect
+      // current DB data (see comment above), but without this header
+      // nothing stops an intermediary (Netlify's CDN, a browser) from
+      // caching a GET response at this same URL and serving a stale PDF
+      // on a later request for the same invoice, even though the server
+      // would render fresh every time it's actually invoked.
+      "Cache-Control": "no-store, must-revalidate",
       "Content-Disposition": "inline",
       "Content-Type": "application/pdf",
     },

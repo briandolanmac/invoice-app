@@ -37,6 +37,9 @@ export async function POST(request: Request) {
   const buffer = await renderToBuffer(<InvoicePdfDocument invoice={pdfData} />);
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
+      // Same reasoning as the saved-invoice PDF route: prevent any
+      // intermediary from caching a preview render.
+      "Cache-Control": "no-store, must-revalidate",
       "Content-Disposition": "inline",
       "Content-Type": "application/pdf",
     },
