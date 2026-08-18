@@ -219,7 +219,7 @@ function RowGroup({
               )}
             </label>
             <label className="grid" style={{ flex: "0 1 70px", gap: 4, minWidth: 0 }}>
-              <span className="muted" style={{ fontSize: 13 }}>Hours</span>
+              <span className="muted" style={{ fontSize: 13 }}>Hours/QTY</span>
               <input
                 name={`${prefix}_qty_${i}`}
                 onChange={(e) => updateRow(i, { qty: e.target.value })}
