@@ -1,5 +1,7 @@
 "use client";
 
+import PendingOverlay from "@/components/PendingOverlay";
+
 const STATUS_COLORS: Record<string, string> = {
   draft: "#667085",
   paid: "#0f766e",
@@ -21,6 +23,7 @@ export default function InvoiceStatusSelect({
 }) {
   return (
     <form action={action}>
+      <PendingOverlay />
       <input name="invoice_id" type="hidden" value={invoiceId} />
       <select
         defaultValue={status}
