@@ -12,10 +12,7 @@ type Agent = { agentId: string; name: string; total: number };
 type Mode = "paid" | "work";
 
 const MODE_LABEL: Record<Mode, string> = { paid: "Paid date", work: "Work date" };
-const MODE_DESCRIPTION: Record<Mode, string> = {
-  paid: "Based on invoices marked paid, by invoice date.",
-  work: "Based on invoices marked paid, by when the work was done.",
-};
+const DESCRIPTION = "Based on invoices marked Paid.";
 
 function formatMoney(amount: number) {
   return `$${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
@@ -41,7 +38,7 @@ export default function RevenueByMonthSection({
         <div>
           <h2 style={{ margin: 0 }}>Revenue by month</h2>
           <p className="muted" style={{ margin: "4px 0 0" }}>
-            {MODE_DESCRIPTION[mode]}
+            {DESCRIPTION}
           </p>
         </div>
 
