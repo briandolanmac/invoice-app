@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import SavedToast from "../invoices/SavedToast";
+import { canAccessAdmin } from "@/lib/admin-access";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { getCurrentUser } from "@/lib/supabase/get-current-user";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -17,6 +18,10 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
   if (!user && !usingDevSession) {
     redirect("/login");
+  }
+  // Not just hiding the header icon -- block direct navigation too.
+  if (user && !canAccessAdmin(user.email)) {
+    redirect("/");
   }
 
   let accounts: { id: string; email: string }[] = [];

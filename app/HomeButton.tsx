@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { signOut } from "@/app/login/actions";
+import { canAccessAdmin } from "@/lib/admin-access";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { getCurrentUser } from "@/lib/supabase/get-current-user";
 
@@ -98,6 +99,7 @@ async function AdminButton() {
   const isAuthenticated = Boolean(user) || usingDevSession;
 
   if (!isAuthenticated) return <span />;
+  if (user && !canAccessAdmin(user.email)) return <span />;
 
   return (
     <Link
