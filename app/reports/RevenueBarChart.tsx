@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef } from "react";
 import { buildAgentColorMap, MAX_DIRECT_SLICES, OTHER_COLOR } from "./agentColors";
 
 type AgentAmount = { agentId: string; amount: number };
@@ -42,6 +45,18 @@ const BOTTOM_PADDING = 40;
 const LEFT_PADDING = 52;
 
 export default function RevenueBarChart({ agents, data }: { agents: Agent[]; data: MonthlyRevenue[] }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Bars are laid out oldest-to-newest so the axis reads left-to-right
+  // normally, but that means the most recent month is scrolled off the
+  // right edge whenever the chart is wider than its container. Open
+  // scrolled all the way to the newest bar instead -- older months are
+  // still just a scroll away to the left.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, [data]);
+
   if (!data.length) {
     return (
       <p className="muted" style={{ margin: 0 }}>
@@ -102,7 +117,7 @@ export default function RevenueBarChart({ agents, data }: { agents: Agent[]; dat
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
-      <div style={{ overflowX: "auto" }}>
+      <div ref={scrollRef} style={{ overflowX: "auto" }}>
         <svg
           aria-label="Revenue by month, by agent"
           height={totalHeight}
