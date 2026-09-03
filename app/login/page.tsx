@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { isLocalDevAuthEnabled } from "@/lib/dev-auth";
 import { signIn, signInForLocalDev } from "./actions";
 
@@ -46,6 +47,10 @@ export default async function LoginPage({
           </label>
           <button className="button" type="submit">Sign in</button>
         </form>
+
+        <p style={{ marginTop: 14 }}>
+          <Link href="/forgot-password">Forgot password?</Link>
+        </p>
 
         {showLocalDevButton ? (
           <>

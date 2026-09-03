@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { buildAgentColorMap, MAX_DIRECT_SLICES, OTHER_COLOR } from "./agentColors";
 
 type AgentRevenue = {
   agentId: string;
@@ -8,16 +9,6 @@ type AgentRevenue = {
   byYear: Record<string, number>;
   total: number;
 };
-
-/** Fixed hue order (never cycled/reassigned by rank), led by the app's
- *  own pink brand accent rather than a generic blue/orange categorical
- *  set, per Brian's ask to keep the chart in the site's style. A pie's
- *  wedges are all mutually adjacent, so direct series are capped at 5
- *  and anything past that folds into a neutral "Other" slice rather
- *  than reusing or inventing colors. */
-const SLICE_COLORS = ["#ec4899", "#f59e0b", "#14b8a6", "#8b5cf6", "#78716c"];
-const OTHER_COLOR = "#c9b3c0";
-const MAX_DIRECT_SLICES = 5;
 
 function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
   const rad = ((angleDeg - 90) * Math.PI) / 180;
@@ -44,15 +35,11 @@ export default function RevenuePieChart({
 }) {
   const [filter, setFilter] = useState<"total" | string>("total");
 
-  // Color is assigned by each agent's rank in the OVERALL total (the
-  // `agents` prop, already sorted by total desc from the server) and
-  // stays fixed regardless of which filter is selected -- otherwise an
-  // agent could land on a different color in the 2025 view than the
-  // 2026 view just because its rank happened to differ that year.
-  const colorByAgentId = new Map<string, string>();
-  agents.forEach((agent, i) => {
-    colorByAgentId.set(agent.agentId, i < MAX_DIRECT_SLICES ? SLICE_COLORS[i] : OTHER_COLOR);
-  });
+  // Colors stay fixed regardless of which filter is selected -- otherwise
+  // an agent could land on a different color in the 2025 view than the
+  // 2026 view just because its rank happened to differ that year. `agents`
+  // is already sorted by total desc from the server.
+  const colorByAgentId = buildAgentColorMap(agents);
 
   function valueFor(agent: AgentRevenue) {
     return filter === "total" ? agent.total : agent.byYear[filter] || 0;

@@ -60,6 +60,15 @@ export default function InvoiceFormFields({
     setInvoiceNumber(nextInvoiceNumber(prefix, agencyInvoiceNumbers[newAgencyId] || []));
   }
 
+  const selectedAgencyPrefix = agencies.find((a) => a.id === agencyId)?.default_invoice_prefix;
+  const canGenerateNumber = Boolean(agencyInvoiceNumbers && selectedAgencyPrefix);
+
+  function handleGenerateNumber() {
+    if (!agencyInvoiceNumbers || !selectedAgencyPrefix) return;
+    setInvoiceNumber(nextInvoiceNumber(selectedAgencyPrefix, agencyInvoiceNumbers[agencyId] || []));
+    setInvoiceNumberTouched(true);
+  }
+
   return (
     <>
       <section className="card" style={{ display: "grid", gap: 14, padding: 24 }}>
@@ -82,18 +91,32 @@ export default function InvoiceFormFields({
           </label>
           <label className="grid" style={{ gap: 6 }}>
             <span>Invoice number</span>
-            <input
-              name="invoice_number"
-              onChange={(e) => {
-                setInvoiceNumber(e.target.value);
-                setInvoiceNumberTouched(true);
-              }}
-              placeholder="e.g. RD-2026-001"
-              required
-              style={inputStyle}
-              type="text"
-              value={invoiceNumber}
-            />
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                name="invoice_number"
+                onChange={(e) => {
+                  setInvoiceNumber(e.target.value);
+                  setInvoiceNumberTouched(true);
+                }}
+                placeholder="e.g. RD-2026-001"
+                required
+                style={{ ...inputStyle, flex: 1 }}
+                type="text"
+                value={invoiceNumber}
+              />
+              {agencyInvoiceNumbers ? (
+                <button
+                  className="button secondary"
+                  disabled={!canGenerateNumber}
+                  onClick={handleGenerateNumber}
+                  style={{ padding: "0 16px", whiteSpace: "nowrap" }}
+                  title={canGenerateNumber ? "Suggest the next number for this agent" : "Select an agent first"}
+                  type="button"
+                >
+                  Generate
+                </button>
+              ) : null}
+            </div>
           </label>
         </div>
         <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>

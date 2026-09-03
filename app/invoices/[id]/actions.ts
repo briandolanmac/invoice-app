@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { nextInvoiceNumber } from "@/lib/invoice-number";
 import { saveInvoicePdfToFiles } from "@/lib/saveInvoicePdf";
 import { createClient } from "@/lib/supabase/server";
 
@@ -23,13 +24,34 @@ export async function copyInvoice(formData: FormData) {
   }
 
   const today = new Date().toISOString().slice(0, 10);
-  const placeholderNumber = `${original.invoice_number}-COPY-${Date.now().toString().slice(-4)}`;
+
+  // Give the copy a real next-in-sequence number (same rule the New Invoice
+  // form uses) instead of the old "<original>-COPY-1234" suffix, which read
+  // as a mistake rather than a usable invoice number. The Edit page (where
+  // this redirects to) also has its own "Generate" button, so this is a
+  // starting suggestion, not the only chance to fix it.
+  let generatedNumber = `${original.invoice_number}-${Date.now().toString().slice(-4)}`;
+  if (original.agency_id) {
+    const { data: agency } = await supabase
+      .from("agencies")
+      .select("default_invoice_prefix")
+      .eq("id", original.agency_id)
+      .maybeSingle();
+    const prefix = agency?.default_invoice_prefix;
+    if (prefix) {
+      const { data: existingNumbers } = await supabase
+        .from("invoices")
+        .select("invoice_number")
+        .like("invoice_number", `${prefix}%`);
+      generatedNumber = nextInvoiceNumber(prefix, (existingNumbers || []).map((row) => row.invoice_number));
+    }
+  }
 
   const { data: copy, error } = await supabase
     .from("invoices")
     .insert({
       agency_id: original.agency_id,
-      invoice_number: placeholderNumber,
+      invoice_number: generatedNumber,
       invoice_date: today,
       tour_group_name: original.tour_group_name,
       notes: original.notes,

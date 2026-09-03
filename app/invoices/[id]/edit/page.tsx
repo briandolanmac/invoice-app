@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import PendingOverlay from "@/components/PendingOverlay";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/get-current-user";
@@ -9,6 +10,7 @@ import { updateInvoice } from "./actions";
 
 type AgencyOption = { id: string; name: string; default_invoice_prefix: string | null };
 type PresetRow = { agency_id: string; description: string; item_type: string };
+type InvoiceNumberRow = { agency_id: string | null; invoice_number: string };
 
 type EditInvoicePageProps = {
   params: Promise<{ id: string }>;
@@ -29,25 +31,30 @@ export default async function EditInvoicePage({ params, searchParams }: EditInvo
     redirect(`/invoices/${id}`);
   }
 
-  const [{ data: invoice }, { data: agencies }, { data: presetRows }, { data: items }] = await Promise.all([
-    supabase.from("invoices").select("*").eq("id", id).maybeSingle(),
-    supabase
-      .from("agencies")
-      .select("id, name, default_invoice_prefix")
-      .eq("is_active", true)
-      .order("name")
-      .returns<AgencyOption[]>(),
-    supabase
-      .from("agency_line_item_presets")
-      .select("agency_id, description, item_type")
-      .order("sort_order")
-      .returns<PresetRow[]>(),
-    supabase
-      .from("invoice_line_items")
-      .select("item_type, description, line_date, quantity, unit_price")
-      .eq("invoice_id", id)
-      .order("sort_order"),
-  ]);
+  const [{ data: invoice }, { data: agencies }, { data: presetRows }, { data: items }, { data: invoiceNumberRows }] =
+    await Promise.all([
+      supabase.from("invoices").select("*").eq("id", id).maybeSingle(),
+      supabase
+        .from("agencies")
+        .select("id, name, default_invoice_prefix")
+        .eq("is_active", true)
+        .order("name")
+        .returns<AgencyOption[]>(),
+      supabase
+        .from("agency_line_item_presets")
+        .select("agency_id, description, item_type")
+        .order("sort_order")
+        .returns<PresetRow[]>(),
+      supabase
+        .from("invoice_line_items")
+        .select("item_type, description, line_date, quantity, unit_price")
+        .eq("invoice_id", id)
+        .order("sort_order"),
+      supabase
+        .from("invoices")
+        .select("agency_id, invoice_number")
+        .returns<InvoiceNumberRow[]>(),
+    ]);
 
   if (!invoice) {
     return (
@@ -67,6 +74,17 @@ export default async function EditInvoicePage({ params, searchParams }: EditInvo
   for (const row of presetRows || []) {
     const target = row.item_type === "expense" ? agencyExpensePresets : agencyServicePresets;
     (target[row.agency_id] ||= []).push(row.description);
+  }
+
+  // Same collision-safe suggestion the New Invoice form uses, powering the
+  // "Generate" button next to the invoice number field here too.
+  const allInvoiceNumbers = (invoiceNumberRows || []).map((row) => row.invoice_number);
+  const agencyInvoiceNumbers: Record<string, string[]> = {};
+  for (const agency of agencies || []) {
+    if (!agency.default_invoice_prefix) continue;
+    agencyInvoiceNumbers[agency.id] = allInvoiceNumbers.filter((n) =>
+      n.startsWith(agency.default_invoice_prefix!)
+    );
   }
 
   // Legacy 'tip'/'adjustment' item types (from the historical import, before
@@ -107,11 +125,13 @@ export default async function EditInvoicePage({ params, searchParams }: EditInvo
         ) : null}
 
         <form action={updateInvoice} className="grid" style={{ gap: 20 }}>
+          <PendingOverlay />
           <input name="invoice_id" type="hidden" value={id} />
 
           <InvoiceFormFields
             agencies={agencies || []}
             agencyExpensePresets={agencyExpensePresets}
+            agencyInvoiceNumbers={agencyInvoiceNumbers}
             agencyServicePresets={agencyServicePresets}
             defaultAgencyId={invoice.agency_id}
             defaultInvoiceDate={invoice.invoice_date}

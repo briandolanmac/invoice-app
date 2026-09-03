@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import PendingOverlay from "@/components/PendingOverlay";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/get-current-user";
@@ -90,6 +91,8 @@ export default async function NewInvoicePage({
           </section>
         ) : (
           <form action={createInvoice} className="grid" id="new-invoice-form" style={{ gap: 20 }}>
+            <PendingOverlay />
+
             <InvoiceFormFields
               agencies={agencies}
               agencyExpensePresets={agencyExpensePresets}

@@ -121,6 +121,30 @@ input[type="date"] {
   background: #f6c9e0;
 }
 
+.segmented-toggle {
+  background: var(--accent-soft);
+  border-radius: 999px;
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  width: fit-content;
+}
+
+.segmented-toggle button {
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  color: var(--accent-dark);
+  cursor: pointer;
+  font-weight: 700;
+  padding: 8px 16px;
+}
+
+.segmented-toggle button[aria-pressed="true"] {
+  background: var(--accent);
+  color: white;
+}
+
 h1,
 h2,
 h3 {
