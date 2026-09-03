@@ -72,26 +72,53 @@ export default async function NewInvoicePage({
   return (
     <main className="page">
       <div className="shell">
-        <header style={{ marginBottom: 24 }}>
-          <Link className="button secondary" href="/invoices">← Invoices</Link>
-          <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>New invoice</h1>
-        </header>
-
-        {params.error ? (
-          <p style={{ color: "var(--danger)", fontWeight: 700, marginBottom: 16 }}>
-            {params.error}
-          </p>
-        ) : null}
-
         {!agencies?.length ? (
-          <section className="card" style={{ padding: 24 }}>
-            <p className="muted" style={{ margin: 0 }}>
-              No agents yet. <Link href="/agents">Add one first</Link>, then come back here.
-            </p>
-          </section>
+          <>
+            <header style={{ marginBottom: 24 }}>
+              <Link className="button secondary" href="/invoices">← Invoices</Link>
+              <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>New invoice</h1>
+            </header>
+
+            {params.error ? (
+              <p style={{ color: "var(--danger)", fontWeight: 700, marginBottom: 16 }}>
+                {params.error}
+              </p>
+            ) : null}
+
+            <section className="card" style={{ padding: 24 }}>
+              <p className="muted" style={{ margin: 0 }}>
+                No agents yet. <Link href="/agents">Add one first</Link>, then come back here.
+              </p>
+            </section>
+          </>
         ) : (
           <form action={createInvoice} className="grid" id="new-invoice-form" style={{ gap: 20 }}>
             <PendingOverlay />
+
+            <header
+              style={{
+                alignItems: "center",
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 12,
+                justifyContent: "space-between",
+              }}
+            >
+              <div>
+                <Link className="button secondary" href="/invoices">← Invoices</Link>
+                <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>New invoice</h1>
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                <button className="button" type="submit">
+                  Save invoice
+                </button>
+                <NewInvoicePreviewButton formId="new-invoice-form" />
+              </div>
+            </header>
+
+            {params.error ? (
+              <p style={{ color: "var(--danger)", fontWeight: 700, margin: 0 }}>{params.error}</p>
+            ) : null}
 
             <InvoiceFormFields
               agencies={agencies}
@@ -112,13 +139,6 @@ export default async function NewInvoicePage({
                 <textarea name="payment_instructions" rows={2} style={inputStyle} />
               </label>
             </section>
-
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-              <button className="button" type="submit">
-                Save invoice
-              </button>
-              <NewInvoicePreviewButton formId="new-invoice-form" />
-            </div>
           </form>
         )}
       </div>

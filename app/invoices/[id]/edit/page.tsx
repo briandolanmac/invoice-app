@@ -113,20 +113,31 @@ export default async function EditInvoicePage({ params, searchParams }: EditInvo
   return (
     <main className="page">
       <div className="shell">
-        <header style={{ marginBottom: 24 }}>
-          <Link className="button secondary" href={`/invoices/${id}`}>
-            ← {invoice.invoice_number}
-          </Link>
-          <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>Edit invoice</h1>
-        </header>
-
-        {search.error ? (
-          <p style={{ color: "var(--danger)", fontWeight: 700, marginBottom: 16 }}>{search.error}</p>
-        ) : null}
-
         <form action={updateInvoice} className="grid" style={{ gap: 20 }}>
           <PendingOverlay />
           <input name="invoice_id" type="hidden" value={id} />
+
+          <header
+            style={{
+              alignItems: "center",
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 12,
+              justifyContent: "space-between",
+            }}
+          >
+            <div>
+              <Link className="button secondary" href={`/invoices/${id}`}>
+                ← {invoice.invoice_number}
+              </Link>
+              <h1 style={{ fontSize: 34, margin: "10px 0 0" }}>Edit invoice</h1>
+            </div>
+            <button className="button" type="submit">Save changes</button>
+          </header>
+
+          {search.error ? (
+            <p style={{ color: "var(--danger)", fontWeight: 700, margin: 0 }}>{search.error}</p>
+          ) : null}
 
           <InvoiceFormFields
             agencies={agencies || []}
@@ -159,10 +170,6 @@ export default async function EditInvoicePage({ params, searchParams }: EditInvo
               />
             </label>
           </section>
-
-          <button className="button" style={{ justifySelf: "start" }} type="submit">
-            Save changes
-          </button>
         </form>
       </div>
     </main>
