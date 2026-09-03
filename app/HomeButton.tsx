@@ -39,6 +39,21 @@ function SignOutIcon() {
   );
 }
 
+function AdminIcon() {
+  return (
+    <svg fill="none" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="8" cy="15" r="4" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="M11 12l9-9M17 6l3 3M14 9l2 2"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+    </svg>
+  );
+}
+
 /** Split out from HomeButton so its Supabase auth check runs inside its
  *  own Suspense boundary instead of blocking the header (and the whole
  *  page shell, since HomeButton lives in the root layout above any
@@ -72,6 +87,36 @@ async function SignOutButton() {
   );
 }
 
+/** Mirrors SignOutButton -- its own async auth check inside its own
+ *  Suspense boundary, so it doesn't block the header shell either. The
+ *  underlying getCurrentUser() call is request-deduped (React cache()),
+ *  so this doesn't cost a second Supabase round-trip alongside
+ *  SignOutButton's own check. */
+async function AdminButton() {
+  const usingDevSession = await hasDevSession();
+  const user = await getCurrentUser();
+  const isAuthenticated = Boolean(user) || usingDevSession;
+
+  if (!isAuthenticated) return <span />;
+
+  return (
+    <Link
+      aria-label="Admin"
+      href="/admin"
+      style={{
+        alignItems: "center",
+        color: "white",
+        display: "flex",
+        justifySelf: "start",
+        padding: 8,
+        textDecoration: "none",
+      }}
+    >
+      <AdminIcon />
+    </Link>
+  );
+}
+
 /**
  * Sticky top bar (not a floating overlay) so it always reserves its own
  * space in normal document flow -- a fixed-position floating circle was
@@ -96,7 +141,9 @@ export default function HomeButton() {
         zIndex: 1000,
       }}
     >
-      <span />
+      <Suspense fallback={<span />}>
+        <AdminButton />
+      </Suspense>
       <Link
         aria-label="Home"
         href="/"
