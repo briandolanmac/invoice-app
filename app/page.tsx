@@ -51,11 +51,19 @@ export default async function HomePage() {
             padding: 24,
           }}
         >
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-            <Link className="button" href="/invoices/new">New invoice</Link>
-            <Link className="button secondary" href="/invoices">View invoices</Link>
-            <Link className="button secondary" href="/agents">Agents</Link>
-            <Link className="button secondary" href="/reports">Reports</Link>
+          <div style={{ display: "grid", gap: 14, justifyItems: "center" }}>
+            <Link
+              className="button"
+              href="/invoices/new"
+              style={{ fontSize: 20, padding: "18px 56px" }}
+            >
+              New invoice
+            </Link>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+              <Link className="button secondary" href="/invoices">View invoices</Link>
+              <Link className="button secondary" href="/agents">Agents</Link>
+              <Link className="button secondary" href="/reports">Reports</Link>
+            </div>
           </div>
         </section>
 
