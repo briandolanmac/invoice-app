@@ -4,6 +4,7 @@ import { signOut } from "@/app/login/actions";
 import { canAccessAdmin } from "@/lib/admin-access";
 import { hasDevSession } from "@/lib/dev-auth-server";
 import { getCurrentUser } from "@/lib/supabase/get-current-user";
+import { getDisplayName } from "@/lib/user-display-name";
 
 function InvoiceIcon() {
   return (
@@ -92,30 +93,42 @@ async function SignOutButton() {
  *  Suspense boundary, so it doesn't block the header shell either. The
  *  underlying getCurrentUser() call is request-deduped (React cache()),
  *  so this doesn't cost a second Supabase round-trip alongside
- *  SignOutButton's own check. */
-async function AdminButton() {
+ *  SignOutButton's own check. Combines the "Hi <name>" greeting and the
+ *  admin icon since they share the same identity check and the same
+ *  header slot. */
+async function AccountBadge() {
   const usingDevSession = await hasDevSession();
   const user = await getCurrentUser();
   const isAuthenticated = Boolean(user) || usingDevSession;
 
   if (!isAuthenticated) return <span />;
-  if (user && !canAccessAdmin(user.email)) return <span />;
+
+  const name = getDisplayName(user?.email);
+  const showAdminLink = user != null && canAccessAdmin(user.email);
 
   return (
-    <Link
-      aria-label="Admin"
-      href="/admin"
-      style={{
-        alignItems: "center",
-        color: "white",
-        display: "flex",
-        justifySelf: "start",
-        padding: 8,
-        textDecoration: "none",
-      }}
-    >
-      <AdminIcon />
-    </Link>
+    <div style={{ alignItems: "center", display: "flex", gap: 4, justifySelf: "start" }}>
+      {name ? (
+        <span style={{ color: "white", fontSize: 15, fontWeight: 700, whiteSpace: "nowrap" }}>
+          Hi {name}
+        </span>
+      ) : null}
+      {showAdminLink ? (
+        <Link
+          aria-label="Admin"
+          href="/admin"
+          style={{
+            alignItems: "center",
+            color: "white",
+            display: "flex",
+            padding: 8,
+            textDecoration: "none",
+          }}
+        >
+          <AdminIcon />
+        </Link>
+      ) : null}
+    </div>
   );
 }
 
@@ -126,8 +139,11 @@ async function AdminButton() {
  * directly on top of the login form's email field). Sticky guarantees it
  * never covers anything, on every page, at every viewport size.
  *
- * Grid with matching-width side columns keeps the logo visually centered
- * whether or not the sign-out button is present (e.g. on /login).
+ * Grid with matching-width side columns kept the logo visually centered
+ * when both sides were icon-only, but the left column now sizes to its
+ * content (auto) instead of a fixed 40px so "Hi <name>" can fit next to
+ * the admin icon -- the logo is no longer perfectly centered on pages
+ * where that greeting renders, which is an acceptable tradeoff.
  */
 export default function HomeButton() {
   return (
@@ -136,7 +152,7 @@ export default function HomeButton() {
         alignItems: "center",
         background: "var(--accent)",
         display: "grid",
-        gridTemplateColumns: "40px 1fr 40px",
+        gridTemplateColumns: "minmax(40px, auto) 1fr 40px",
         padding: "14px 16px",
         position: "sticky",
         top: 0,
@@ -144,7 +160,7 @@ export default function HomeButton() {
       }}
     >
       <Suspense fallback={<span />}>
-        <AdminButton />
+        <AccountBadge />
       </Suspense>
       <Link
         aria-label="Home"
